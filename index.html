@@ -395,7 +395,140 @@
     .mobile-tab.active { color:var(--verde); border-bottom-color:var(--verde); font-weight:600; }
   }
   @media(min-width:601px) { .mobile-tabs { display:none; } }
-</style>
+
+  /* ═══════════════════════════════════════════════════════════════
+     MOBILE OPTIMIZATIONS — Touch-first, 375px+
+  ═══════════════════════════════════════════════════════════════ */
+
+  /* ── Base mobile resets ─────────────────────────────────────── */
+  @media(max-width:600px) {
+
+    /* Prevent iOS zoom on inputs */
+    input, select, textarea { font-size: 16px !important; }
+
+    /* Page padding */
+    .page { padding: 16px 12px 80px 12px; }
+
+    /* Top nav — compact */
+    .topnav { padding: 0 12px; height: 52px; }
+    .nav-logo { font-size: 1.1rem; }
+    .nav-user { gap: 6px; }
+    .logout-btn { padding: 5px 10px; font-size: 0.78rem; }
+    #sync-status { font-size: 0.68rem !important; padding: 2px 6px !important; }
+
+    /* ── Recetario ────────────────────────────────────────────── */
+    .search-bar { flex-direction: column; gap: 8px; }
+    .search-bar input { width: 100%; min-width: unset; }
+    .search-bar > div { display: flex; flex-wrap: wrap; gap: 6px; }
+    .filter-btn { flex: 1; min-width: 80px; text-align: center; padding: 8px 10px; font-size: 0.8rem; }
+    .recipes-grid { grid-template-columns: 1fr; gap: 12px; }
+    .recipe-card { padding: 16px; }
+    .cat-title { font-size: 1.2rem; }
+
+    /* ── Modal receta ─────────────────────────────────────────── */
+    .modal-overlay { padding: 0; align-items: flex-end; }
+    .modal {
+      border-radius: 20px 20px 0 0;
+      max-height: 92vh;
+      padding: 24px 20px 32px;
+      width: 100%;
+      max-width: 100%;
+    }
+    .modal-close { top: 14px; right: 14px; }
+    .modal h2 { font-size: 1.35rem; }
+    .add-to-plan-btn { position: sticky; bottom: 0; margin-top: 16px; }
+
+    /* ── Planeador semanal ────────────────────────────────────── */
+    .week-grid { grid-template-columns: 1fr; gap: 10px; }
+    .day-col { display: flex; flex-direction: column; }
+    .day-meals { flex-direction: row; flex-wrap: wrap; gap: 6px; padding: 8px; }
+    .meal-slot { flex: 1 1 calc(50% - 6px); min-width: 130px; min-height: 48px; }
+    .week-controls { flex-wrap: wrap; gap: 8px; }
+    .week-label { font-size: 0.95rem; }
+    .week-summary { padding: 16px; }
+    .clear-week-btn { width: 100%; }
+
+    /* Selector modal recetas */
+    .selector-modal { border-radius: 20px 20px 0 0; max-height: 90vh; }
+    .selector-grid { grid-template-columns: 1fr 1fr; gap: 8px; max-height: 320px; }
+    .selector-card { padding: 10px 12px; }
+    .selector-cats { gap: 4px; }
+    .selector-cats button { padding: 6px 10px; font-size: 0.78rem; }
+
+    /* ── ¿Qué puedo hacer? ───────────────────────────────────── */
+    .pantry-input-area { padding: 16px; }
+    .pantry-add-row { flex-direction: row; }
+    .pantry-add-row input { flex: 1; }
+    .match-grid { grid-template-columns: 1fr; gap: 12px; }
+    .match-card { padding: 16px; }
+    #quick-ings { gap: 6px; }
+    .pantry-tag { padding: 7px 12px; font-size: 0.8rem; }
+
+    /* ── Despensa ────────────────────────────────────────────── */
+    .despensa-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-card { padding: 12px; }
+    .stat-num { font-size: 1.5rem; }
+    .despensa-controls { flex-direction: column; gap: 8px; }
+    .despensa-controls .add-row-btn { width: 100%; }
+    .filter-row { gap: 6px; }
+    .filter-select { flex: 1; min-width: 130px; font-size: 0.82rem; }
+    .export-btn { flex: 1; font-size: 0.8rem; padding: 8px 12px; }
+
+    /* Tabla despensa → scroll horizontal */
+    .despensa-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .despensa-table { min-width: 700px; }
+    .despensa-table th, .despensa-table td { padding: 9px 10px; font-size: 0.82rem; }
+    .despensa-table input, .despensa-table select { font-size: 14px !important; padding: 5px 8px; }
+
+    /* ── Login ───────────────────────────────────────────────── */
+    .login-card { padding: 32px 24px; width: 100%; max-width: 340px; }
+    .login-logo { font-size: 1.8rem; }
+
+    /* ── Page header ─────────────────────────────────────────── */
+    .page-header h1 { font-size: 1.6rem; }
+    .page-header p { font-size: 0.88rem; }
+
+    /* ── Touch targets mínimo 44px ───────────────────────────── */
+    .nav-tab, .mobile-tab, .filter-btn, .pantry-tag,
+    .add-row-btn, .export-btn, .clear-week-btn,
+    .login-btn, .add-to-plan-btn, .pantry-add-btn,
+    .week-nav button {
+      min-height: 44px;
+    }
+    .meal-slot { min-height: 44px; }
+    .meal-remove { width: 24px; height: 24px; display: flex !important; opacity: 0.7; }
+
+    /* ── Scroll suave en listas ──────────────────────────────── */
+    .selector-grid, .match-grid, .recipes-grid {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── Active states táctiles ──────────────────────────────── */
+    .recipe-card:active { transform: scale(0.98); }
+    .meal-slot:active { background: #e0f5e9; }
+    .selector-card:active { background: #e0f5e9; border-color: var(--verde-claro); }
+    .pantry-tag:active { background: var(--verde); color: #fff; }
+    .filter-btn:active { background: var(--verde); color: #fff; }
+  }
+
+  /* ── Tablet 601–900px ───────────────────────────────────────── */
+  @media(min-width:601px) and (max-width:900px) {
+    .page { padding: 24px 20px 40px; }
+    .recipes-grid { grid-template-columns: repeat(2,1fr); }
+    .match-grid { grid-template-columns: repeat(2,1fr); }
+    .despensa-stats { grid-template-columns: repeat(3,1fr); }
+    .week-grid { grid-template-columns: repeat(4,1fr); }
+    .modal { max-width: 520px; }
+  }
+
+  /* ── Safe area para iPhones con notch ───────────────────────── */
+  @supports(padding: max(0px)) {
+    .topnav { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
+    .mobile-tabs { padding-bottom: max(0px, env(safe-area-inset-bottom)); }
+    .page { padding-bottom: max(80px, calc(60px + env(safe-area-inset-bottom))); }
+  }
+
+  </style>
 <!-- JSONBin.io — sincronización en la nube con bins fijos -->
 <script>
 // ── PEGA TU SECRET KEY DE JSONBIN.IO ────────────────────────────
@@ -1120,7 +1253,6 @@ let selectorContext = null;
 let pantryIngredients = [];
 let despensaData = [];
 let selectorCatFilter = 'all';
-let _fbReady = false;
 
 // ================================================================
 // AUTH
