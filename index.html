@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recetario Mexicano Saludable</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --verde: #2d6a4f;
+    --verde-claro: #40916c;
+    --verde-menta: #74c69d;
+    --crema: #fefae0;
+    --naranja: #e76f51;
+    --naranja-claro: #f4a261;
+    --amarillo: #e9c46a;
+    --cafe: #6b4226;
+    --cafe-claro: #9b6b4a;
+    --text: #1a1a2e;
+    --text-muted: #5a5a7a;
+    --bg: #fefdf8;
+    --card-bg: #ffffff;
+    --shadow: 0 4px 24px rgba(45,106,79,0.10);
+    --radius: 18px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+  /* ===== LOGIN ===== */
+  #login-screen {
+    position:fixed; inset:0; z-index:9999;
+    background: linear-gradient(135deg, #1a3c2e 0%, #2d6a4f 50%, #1a2a1a 100%);
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column;
+  }
+  .login-logo { font-family:'Playfair Display',serif; font-size:2.2rem; color:#74c69d; font-weight:900; letter-spacing:-1px; margin-bottom:8px; }
+  .login-sub { color:#a8d8be; font-size:0.9rem; margin-bottom:40px; letter-spacing:2px; text-transform:uppercase; }
+  .login-card {
+    background:rgba(255,255,255,0.06); backdrop-filter:blur(20px);
+    border:1px solid rgba(116,198,157,0.2); border-radius:24px;
+    padding:48px 44px; width:360px; max-width:90vw;
+  }
+  .login-card h2 { font-family:'Playfair Display',serif; color:#fefae0; font-size:1.6rem; margin-bottom:28px; }
+  .login-field { margin-bottom:20px; }
+  .login-field label { display:block; color:#a8d8be; font-size:0.8rem; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
+  .login-field input {
+    width:100%; padding:14px 18px; background:rgba(255,255,255,0.08);
+    border:1px solid rgba(116,198,157,0.25); border-radius:12px;
+    color:#fefae0; font-size:1rem; font-family:'DM Sans',sans-serif;
+    outline:none; transition:border-color 0.2s;
+  }
+  .login-field input:focus { border-color:#74c69d; }
+  .login-btn {
+    width:100%; padding:16px; background:linear-gradient(135deg,#40916c,#2d6a4f);
+    color:#fefae0; font-size:1rem; font-weight:600; letter-spacing:0.5px;
+    border:none; border-radius:12px; cursor:pointer; margin-top:8px;
+    transition:transform 0.15s, box-shadow 0.15s;
+    font-family:'DM Sans',sans-serif;
+  }
+  .login-btn:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(64,145,108,0.4); }
+  .login-error { color:#e76f51; font-size:0.85rem; margin-top:12px; display:none; }
+
+  /* ===== APP WRAPPER ===== */
+  #app { display:none; }
+
+  /* ===== TOP NAV ===== */
+  .topnav {
+    background:#fff; border-bottom:2px solid var(--verde-menta);
+    padding:0 32px; height:64px; display:flex; align-items:center;
+    justify-content:space-between; position:sticky; top:0; z-index:100;
+    box-shadow:0 2px 16px rgba(45,106,79,0.08);
+  }
+  .nav-logo { font-family:'Playfair Display',serif; font-size:1.35rem; font-weight:900; color:var(--verde); }
+  .nav-logo span { color:var(--naranja); }
+  .nav-tabs { display:flex; gap:4px; }
+  .nav-tab {
+    padding:8px 18px; border-radius:10px; cursor:pointer; font-size:0.88rem;
+    font-weight:500; color:var(--text-muted); transition:all 0.2s; border:none;
+    background:none; font-family:'DM Sans',sans-serif;
+  }
+  .nav-tab.active { background:var(--verde); color:#fff; }
+  .nav-tab:hover:not(.active) { background:var(--crema); color:var(--verde); }
+  .nav-user { display:flex; align-items:center; gap:10px; }
+  .nav-user span { font-size:0.85rem; color:var(--text-muted); }
+  .logout-btn {
+    padding:6px 14px; border-radius:8px; border:1px solid var(--verde-menta);
+    background:none; color:var(--verde); font-size:0.82rem; cursor:pointer;
+    font-family:'DM Sans',sans-serif; transition:all 0.2s;
+  }
+  .logout-btn:hover { background:var(--verde); color:#fff; }
+
+  /* ===== MAIN CONTENT ===== */
+  .page { display:none; padding:32px; max-width:1400px; margin:0 auto; }
+  .page.active { display:block; }
+
+  /* ===== SECTION HEADERS ===== */
+  .page-header { margin-bottom:28px; }
+  .page-header h1 { font-family:'Playfair Display',serif; font-size:2.2rem; color:var(--verde); }
+  .page-header p { color:var(--text-muted); margin-top:6px; }
+
+  /* ===== RECETARIO ===== */
+  .search-bar {
+    display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; align-items:center;
+  }
+  .search-bar input {
+    flex:1; min-width:220px; padding:12px 18px; border:1.5px solid #e0e8e4;
+    border-radius:12px; font-size:0.95rem; font-family:'DM Sans',sans-serif;
+    outline:none; background:#fff; transition:border-color 0.2s;
+  }
+  .search-bar input:focus { border-color:var(--verde-claro); }
+  .filter-btn {
+    padding:10px 18px; border-radius:10px; border:1.5px solid #e0e8e4;
+    background:#fff; cursor:pointer; font-family:'DM Sans',sans-serif;
+    font-size:0.85rem; color:var(--text-muted); transition:all 0.2s;
+  }
+  .filter-btn.active { background:var(--verde); color:#fff; border-color:var(--verde); }
+  .filter-btn:hover:not(.active) { border-color:var(--verde-claro); color:var(--verde); }
+
+  .cat-section { margin-bottom:40px; }
+  .cat-title {
+    font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--verde);
+    margin-bottom:16px; display:flex; align-items:center; gap:10px;
+  }
+  .cat-title::after { content:''; flex:1; height:2px; background:linear-gradient(to right,var(--verde-menta),transparent); }
+  .cat-badge {
+    font-family:'DM Sans',sans-serif; font-size:0.72rem; font-weight:600;
+    padding:3px 10px; border-radius:20px; letter-spacing:1px; text-transform:uppercase;
+  }
+  .badge-prep { background:#e8f5e9; color:#2d6a4f; }
+  .badge-des { background:#fff3e0; color:#e65100; }
+  .badge-com { background:#fce4ec; color:#c62828; }
+  .badge-cen { background:#e8eaf6; color:#283593; }
+
+  .recipes-grid {
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:18px;
+  }
+  .recipe-card {
+    background:var(--card-bg); border-radius:var(--radius); padding:22px;
+    box-shadow:var(--shadow); cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;
+    border:1.5px solid transparent; position:relative; overflow:hidden;
+  }
+  .recipe-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:4px;
+  }
+  .recipe-card.prep::before { background:linear-gradient(90deg,var(--verde),var(--verde-menta)); }
+  .recipe-card.desayuno::before { background:linear-gradient(90deg,var(--naranja-claro),var(--amarillo)); }
+  .recipe-card.comida::before { background:linear-gradient(90deg,var(--naranja),var(--naranja-claro)); }
+  .recipe-card.cena::before { background:linear-gradient(90deg,var(--cafe),var(--cafe-claro)); }
+  .recipe-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(45,106,79,0.16); border-color:var(--verde-menta); }
+  .recipe-name { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:700; color:var(--text); margin-bottom:8px; line-height:1.3; }
+  .recipe-cal { font-size:0.82rem; color:var(--text-muted); display:flex; align-items:center; gap:6px; }
+  .cal-pill { background:var(--crema); padding:3px 10px; border-radius:20px; font-size:0.78rem; font-weight:600; color:var(--verde); }
+
+  /* Modal */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000;
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:#fff; border-radius:24px; max-width:640px; width:100%;
+    max-height:85vh; overflow-y:auto; padding:36px; position:relative;
+    box-shadow:0 24px 64px rgba(0,0,0,0.2);
+  }
+  .modal-close {
+    position:absolute; top:20px; right:20px; width:36px; height:36px;
+    border-radius:50%; border:none; background:var(--crema); cursor:pointer;
+    font-size:1.2rem; display:flex; align-items:center; justify-content:center;
+    color:var(--text-muted); transition:background 0.2s;
+  }
+  .modal-close:hover { background:var(--verde-menta); }
+  .modal h2 { font-family:'Playfair Display',serif; font-size:1.7rem; color:var(--verde); margin-bottom:6px; line-height:1.2; }
+  .modal-kcal { font-size:0.88rem; color:var(--text-muted); margin-bottom:24px; display:flex; gap:12px; flex-wrap:wrap; }
+  .macro-pill { padding:4px 12px; border-radius:20px; font-weight:600; font-size:0.8rem; }
+  .macro-kcal { background:#e8f5e9; color:var(--verde); }
+  .macro-p { background:#e3f2fd; color:#1565c0; }
+  .macro-f { background:#fff8e1; color:#f57f17; }
+  .modal-section { margin-bottom:22px; }
+  .modal-section h3 { font-size:0.78rem; letter-spacing:1.5px; text-transform:uppercase; color:var(--verde-claro); font-weight:600; margin-bottom:12px; }
+  .ing-list { list-style:none; display:flex; flex-direction:column; gap:6px; }
+  .ing-list li { display:flex; align-items:flex-start; gap:8px; font-size:0.92rem; }
+  .ing-list li::before { content:'•'; color:var(--verde-claro); font-weight:900; margin-top:1px; flex-shrink:0; }
+  .proc-list { list-style:none; display:flex; flex-direction:column; gap:10px; }
+  .proc-list li { display:flex; gap:12px; font-size:0.92rem; line-height:1.5; }
+  .proc-num {
+    width:24px; height:24px; border-radius:50%; background:var(--verde);
+    color:#fff; font-size:0.75rem; font-weight:700; display:flex;
+    align-items:center; justify-content:center; flex-shrink:0; margin-top:2px;
+  }
+  .add-to-plan-btn {
+    width:100%; padding:14px; background:linear-gradient(135deg,var(--verde-claro),var(--verde));
+    color:#fff; border:none; border-radius:12px; font-size:1rem; font-weight:600;
+    cursor:pointer; font-family:'DM Sans',sans-serif; margin-top:8px;
+    transition:transform 0.15s, box-shadow 0.15s;
+  }
+  .add-to-plan-btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(45,106,79,0.3); }
+
+  /* ===== PLANEADOR SEMANAL ===== */
+  .week-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:12px; margin-bottom:32px; }
+  .day-col {
+    background:var(--card-bg); border-radius:16px; overflow:hidden;
+    box-shadow:var(--shadow); border:1.5px solid #eef2ef;
+  }
+  .day-header {
+    background:var(--verde); color:#fff; text-align:center; padding:10px 8px;
+    font-weight:600; font-size:0.82rem; text-transform:uppercase; letter-spacing:0.5px;
+  }
+  .day-header.today { background:var(--naranja); }
+  .day-meals { padding:10px; display:flex; flex-direction:column; gap:6px; }
+  .meal-slot {
+    background:var(--crema); border-radius:10px; padding:8px 10px; cursor:pointer;
+    transition:all 0.2s; border:1.5px dashed #c8dfd0; min-height:52px;
+    position:relative;
+  }
+  .meal-slot:hover { border-color:var(--verde-claro); background:#f0faf4; }
+  .meal-slot.filled { border-style:solid; border-color:var(--verde-menta); background:#f0faf4; }
+  .meal-slot-label { font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px; font-weight:600; margin-bottom:2px; }
+  .meal-slot-name { font-size:0.8rem; color:var(--verde); font-weight:600; line-height:1.2; }
+  .meal-remove {
+    position:absolute; top:4px; right:4px; width:18px; height:18px; border-radius:50%;
+    background:var(--naranja); color:#fff; border:none; cursor:pointer;
+    font-size:0.65rem; display:none; align-items:center; justify-content:center;
+    font-weight:700;
+  }
+  .meal-slot.filled:hover .meal-remove { display:flex; }
+  .week-controls { display:flex; gap:12px; margin-bottom:20px; align-items:center; flex-wrap:wrap; }
+  .week-nav { display:flex; align-items:center; gap:8px; }
+  .week-nav button {
+    width:36px; height:36px; border-radius:50%; border:1.5px solid var(--verde-menta);
+    background:#fff; cursor:pointer; font-size:1rem; color:var(--verde);
+    transition:all 0.2s; display:flex; align-items:center; justify-content:center;
+  }
+  .week-nav button:hover { background:var(--verde); color:#fff; }
+  .week-label { font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--verde); font-weight:700; }
+  .clear-week-btn {
+    padding:8px 18px; border-radius:10px; border:1.5px solid var(--naranja);
+    background:#fff; color:var(--naranja); cursor:pointer; font-size:0.85rem;
+    font-family:'DM Sans',sans-serif; transition:all 0.2s;
+  }
+  .clear-week-btn:hover { background:var(--naranja); color:#fff; }
+  .week-summary {
+    background:var(--card-bg); border-radius:16px; padding:20px 24px;
+    box-shadow:var(--shadow); margin-top:8px;
+  }
+  .week-summary h3 { font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--verde); margin-bottom:12px; }
+  .summary-list { display:flex; flex-direction:column; gap:6px; }
+  .summary-item { font-size:0.88rem; color:var(--text-muted); display:flex; gap:6px; align-items:center; }
+  .summary-item strong { color:var(--text); }
+
+  /* Modal Selector de Recetas */
+  .selector-modal { max-width:720px; }
+  .selector-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; margin-top:12px; max-height:400px; overflow-y:auto; }
+  .selector-card {
+    padding:12px 14px; background:var(--crema); border-radius:12px; cursor:pointer;
+    transition:all 0.2s; border:1.5px solid transparent; font-size:0.85rem;
+  }
+  .selector-card:hover { border-color:var(--verde-claro); background:#f0faf4; }
+  .selector-card .s-name { font-weight:600; color:var(--text); margin-bottom:2px; }
+  .selector-card .s-kcal { font-size:0.75rem; color:var(--text-muted); }
+  .selector-search { width:100%; padding:10px 16px; border:1.5px solid #e0e8e4; border-radius:10px; margin-bottom:14px; font-family:'DM Sans',sans-serif; font-size:0.92rem; outline:none; }
+  .selector-search:focus { border-color:var(--verde-claro); }
+  .selector-cats { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+
+  /* ===== QUE HACER HOY ===== */
+  .pantry-search-area { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:28px; }
+  .pantry-tag {
+    padding:8px 16px; border-radius:20px; border:1.5px solid #e0e8e4;
+    background:#fff; cursor:pointer; font-size:0.84rem; color:var(--text-muted);
+    transition:all 0.2s; font-family:'DM Sans',sans-serif;
+  }
+  .pantry-tag.selected { background:var(--verde-claro); color:#fff; border-color:var(--verde-claro); }
+  .pantry-tag:hover:not(.selected) { border-color:var(--verde-claro); color:var(--verde); }
+  .pantry-input-area {
+    background:var(--card-bg); border-radius:16px; padding:24px; box-shadow:var(--shadow);
+    margin-bottom:24px;
+  }
+  .pantry-input-area h3 { font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--verde); margin-bottom:14px; }
+  .pantry-chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; min-height:36px; }
+  .pantry-chip {
+    padding:6px 14px; background:var(--verde); color:#fff; border-radius:20px;
+    font-size:0.82rem; font-weight:600; display:flex; align-items:center; gap:6px;
+  }
+  .pantry-chip button { background:none; border:none; color:#fff; cursor:pointer; font-size:1rem; line-height:1; padding:0; margin-left:2px; }
+  .pantry-add-row { display:flex; gap:8px; }
+  .pantry-add-row input {
+    flex:1; padding:10px 16px; border:1.5px solid #e0e8e4; border-radius:10px;
+    font-family:'DM Sans',sans-serif; font-size:0.92rem; outline:none;
+  }
+  .pantry-add-row input:focus { border-color:var(--verde-claro); }
+  .pantry-add-btn {
+    padding:10px 20px; background:var(--verde); color:#fff; border:none;
+    border-radius:10px; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:0.9rem;
+    font-weight:600; transition:background 0.2s;
+  }
+  .pantry-add-btn:hover { background:var(--verde-claro); }
+  .recipes-match { margin-top:8px; }
+  .recipes-match h3 { font-family:'Playfair Display',serif; font-size:1.3rem; color:var(--verde); margin-bottom:16px; }
+  .match-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; font-size:0.78rem; font-weight:600; }
+  .match-full { background:#e8f5e9; color:var(--verde); }
+  .match-partial { background:#fff3e0; color:#e65100; }
+  .match-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; margin-top:12px; }
+  .match-card {
+    background:var(--card-bg); border-radius:16px; padding:20px; box-shadow:var(--shadow);
+    cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;
+    border:1.5px solid transparent;
+  }
+  .match-card.full { border-left:4px solid var(--verde); }
+  .match-card.partial { border-left:4px solid var(--naranja-claro); }
+  .match-card:hover { transform:translateY(-3px); box-shadow:0 10px 28px rgba(45,106,79,0.14); }
+  .match-card-name { font-family:'Playfair Display',serif; font-size:1rem; font-weight:700; margin-bottom:8px; }
+  .missing-ings { font-size:0.8rem; color:var(--naranja); margin-top:6px; }
+  .missing-ings span { font-weight:600; }
+  .match-percent { font-size:0.8rem; color:var(--text-muted); margin-top:4px; }
+
+  /* ===== DESPENSA ===== */
+  .despensa-controls { display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; align-items:center; }
+  .despensa-stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; margin-bottom:28px; }
+  .stat-card {
+    background:var(--card-bg); border-radius:16px; padding:18px 20px;
+    box-shadow:var(--shadow); text-align:center;
+  }
+  .stat-num { font-family:'Playfair Display',serif; font-size:2rem; font-weight:900; color:var(--verde); }
+  .stat-label { font-size:0.8rem; color:var(--text-muted); margin-top:2px; }
+
+  .despensa-table-wrap { background:var(--card-bg); border-radius:16px; box-shadow:var(--shadow); overflow:hidden; margin-bottom:24px; }
+  .despensa-table { width:100%; border-collapse:collapse; }
+  .despensa-table th {
+    background:var(--verde); color:#fff; padding:12px 14px; text-align:left;
+    font-size:0.78rem; letter-spacing:0.5px; text-transform:uppercase; font-weight:600;
+    white-space:nowrap;
+  }
+  .despensa-table td { padding:11px 14px; border-bottom:1px solid #f0f4f2; vertical-align:middle; }
+  .despensa-table tr:last-child td { border-bottom:none; }
+  .despensa-table tr:hover td { background:#f9fcfa; }
+  .despensa-table input, .despensa-table select {
+    width:100%; border:1.5px solid transparent; border-radius:8px; padding:6px 10px;
+    font-family:'DM Sans',sans-serif; font-size:0.87rem; background:transparent;
+    outline:none; transition:border-color 0.2s;
+  }
+  .despensa-table input:focus, .despensa-table select:focus { border-color:var(--verde-claro); background:#fff; }
+  .delete-row-btn {
+    width:28px; height:28px; border-radius:50%; background:#fce8e3;
+    border:none; cursor:pointer; color:var(--naranja); font-size:1rem;
+    display:flex; align-items:center; justify-content:center; transition:background 0.2s;
+  }
+  .delete-row-btn:hover { background:var(--naranja); color:#fff; }
+  .add-row-btn {
+    padding:12px 24px; background:linear-gradient(135deg,var(--verde-claro),var(--verde));
+    color:#fff; border:none; border-radius:12px; cursor:pointer; font-size:0.92rem;
+    font-weight:600; font-family:'DM Sans',sans-serif; transition:transform 0.15s, box-shadow 0.15s;
+  }
+  .add-row-btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(45,106,79,0.3); }
+
+  .zona-badge {
+    display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.75rem;
+    font-weight:600; white-space:nowrap;
+  }
+  .zona-verduras { background:#e8f5e9; color:#2d6a4f; }
+  .zona-carniceria { background:#fce4ec; color:#c62828; }
+  .zona-salchichoneria { background:#fce4ec; color:#ad1457; }
+  .zona-congelados { background:#e3f2fd; color:#1565c0; }
+  .zona-lacteos { background:#fff8e1; color:#f57f17; }
+  .zona-abarrotes { background:#f3e5f5; color:#6a1b9a; }
+  .zona-panaderia { background:#fff3e0; color:#e65100; }
+  .zona-pasillo { background:#e8eaf6; color:#283593; }
+  .zona-otros { background:#efebe9; color:#4e342e; }
+
+  .filter-row { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .filter-select {
+    padding:9px 14px; border:1.5px solid #e0e8e4; border-radius:10px;
+    font-family:'DM Sans',sans-serif; font-size:0.85rem; outline:none; background:#fff;
+    color:var(--text); transition:border-color 0.2s;
+  }
+  .filter-select:focus { border-color:var(--verde-claro); }
+  .export-btn {
+    padding:10px 20px; border-radius:10px; border:1.5px solid var(--verde-menta);
+    background:#fff; color:var(--verde); cursor:pointer; font-size:0.85rem;
+    font-family:'DM Sans',sans-serif; transition:all 0.2s; font-weight:600;
+  }
+  .export-btn:hover { background:var(--verde); color:#fff; }
+
+  /* ===== RESPONSIVE ===== */
+  @media(max-width:900px) {
+    .week-grid { grid-template-columns:repeat(4,1fr); }
+    .topnav { padding:0 16px; height:56px; }
+    .nav-tab { padding:6px 10px; font-size:0.8rem; }
+    .page { padding:20px 16px; }
+  }
+  @media(max-width:600px) {
+    .week-grid { grid-template-columns:1fr 1fr; }
+    .nav-tabs { display:none; }
+    .mobile-tabs { display:flex; gap:0; overflow-x:auto; background:#fff; border-bottom:2px solid var(--verde-menta); padding:0 12px; }
+    .mobile-tab { padding:12px 14px; white-space:nowrap; color:var(--text-muted); font-size:0.85rem; cursor:pointer; font-family:'DM Sans',sans-serif; border-bottom:3px solid transparent; }
+    .mobile-tab.active { color:var(--verde); border-bottom-color:var(--verde); font-weight:600; }
+  }
+  @media(min-width:601px) { .mobile-tabs { display:none; } }
+</style>
+<!-- JSONBin.io — sincronización en la nube con bins fijos -->
+<script>
+// ── PEGA TU SECRET KEY DE JSONBIN.IO ────────────────────────────
+const JB_KEY = '$2a$10$ezcdi9Oye00pZnlXOoiNp.6QxoIAZVX19AgLwNgwTYypBdgbMqT.';   // ← reemplaza con tu clave
+
+// ── IDs FIJOS — no cambiar ───────────────────────────────────────
+const JB_BINS = {
+  weekPlan:   '69dd48c936566621a8acd5cb',
+  pantryIngs: '69dd48e436566621a8acd63c',
+  despensa:   '69dd48f9856a6821892dba7e'
+};
+
+const JB_BASE = 'https://api.jsonbin.io/v3';
+let _fbReady = false;
+let _saveTimers = {};
+
+async function jbGet(docName) {
+  if (!JB_KEY || JB_KEY === 'TU_SECRET_KEY') return null;
+  try {
+    const res = await fetch(JB_BASE + '/b/' + JB_BINS[docName] + '/latest', {
+      headers: { 'X-Master-Key': JB_KEY }
+    });
+    if (!res.ok) { console.warn('jbGet status:', res.status); return null; }
+    const data = await res.json();
+    return (data.record && data.record.value !== undefined) ? data.record.value : null;
+  } catch(e) { console.warn('jbGet error:', e.message); return null; }
+}
+
+async function jbSet(docName, value) {
+  if (!JB_KEY || JB_KEY === 'TU_SECRET_KEY') return;
+  clearTimeout(_saveTimers[docName]);
+  _saveTimers[docName] = setTimeout(async function() {
+    showSync('saving');
+    try {
+      const res = await fetch(JB_BASE + '/b/' + JB_BINS[docName], {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Master-Key': JB_KEY },
+        body: JSON.stringify({ value: JSON.parse(JSON.stringify(value)) })
+      });
+      if (res.ok) showSync('saved');
+      else { showSync('error'); console.warn('jbSet status:', res.status); }
+    } catch(e) { showSync('error'); console.error('jbSet error:', e.message); }
+  }, 800);
+}
+
+function showSync(state) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  if (state === 'saving') { el.textContent = '⏳ Guardando…'; el.style.color = '#b7791f'; }
+  else if (state === 'saved') { el.textContent = '☁️ Guardado'; el.style.color = '#2d6a4f'; }
+  else { el.textContent = '⚠️ Sin conexión'; el.style.color = '#c53030'; }
+  el.style.display = 'inline';
+  if (state === 'saved') setTimeout(function() { el.style.display = 'none'; }, 2500);
+}
+</script>
+
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-logo">🌿 Recetario</div>
+  <div class="login-sub">Mexicano pero Saludable</div>
+  <div class="login-card">
+    <h2>Bienvenido 👋</h2>
+    <div class="login-field">
+      <label>Usuario</label>
+      <input type="text" id="login-user" placeholder="Escribe tu usuario" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Entrar →</button>
+    <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <nav class="topnav">
+    <div class="nav-logo">🌿 Recetario <span>Saludable</span></div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showPage('recetario')">📖 Recetario</button>
+      <button class="nav-tab" onclick="showPage('planeador')">📅 Planeador</button>
+      <button class="nav-tab" onclick="showPage('quehoy')">🔍 ¿Qué hago?</button>
+      <button class="nav-tab" onclick="showPage('despensa')">🛒 Despensa</button>
+    </div>
+    <div class="nav-user">
+      <span id="sync-status" style="font-size:0.73rem;display:none;padding:2px 9px;border-radius:6px;background:rgba(45,106,79,0.09);font-weight:500;"></span>
+      <span style="font-size:0.85rem;color:var(--text-muted)">👤 brikatwo</span>
+      <button class="logout-btn" onclick="doLogout()">Salir</button>
+    </div>
+  </nav>
+
+  <!-- Mobile tabs -->
+  <div class="mobile-tabs">
+    <div class="mobile-tab active" onclick="showPage('recetario')">📖 Recetario</div>
+    <div class="mobile-tab" onclick="showPage('planeador')">📅 Planeador</div>
+    <div class="mobile-tab" onclick="showPage('quehoy')">🔍 ¿Qué hago?</div>
+    <div class="mobile-tab" onclick="showPage('despensa')">🛒 Despensa</div>
+  </div>
+
+  <!-- PAGE: RECETARIO -->
+  <div class="page active" id="page-recetario">
+    <div class="page-header">
+      <h1>Recetario Mexicano Saludable</h1>
+      <p>Por L.N. Gil Treviño y L.N. Roxana Chaires · Desayunos 300-500 kcal · Comidas y Cenas 500-700 kcal</p>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="recipe-search" placeholder="Buscar receta..." oninput="filterRecipes()">
+      <button class="filter-btn active" onclick="setFilter('all',this)">Todas</button>
+      <button class="filter-btn" onclick="setFilter('prep',this)">Preparaciones</button>
+      <button class="filter-btn" onclick="setFilter('desayuno',this)">Desayunos</button>
+      <button class="filter-btn" onclick="setFilter('comida',this)">Comidas</button>
+      <button class="filter-btn" onclick="setFilter('cena',this)">Cenas</button>
+    </div>
+    <div id="recipes-container"></div>
+  </div>
+
+  <!-- PAGE: PLANEADOR -->
+  <div class="page" id="page-planeador">
+    <div class="page-header">
+      <h1>Planeador Semanal</h1>
+      <p>Organiza tus comidas de la semana. Haz clic en cualquier espacio para asignar una receta.</p>
+    </div>
+    <div class="week-controls">
+      <div class="week-nav">
+        <button onclick="changeWeek(-1)">‹</button>
+        <span class="week-label" id="week-label">Semana actual</span>
+        <button onclick="changeWeek(1)">›</button>
+      </div>
+      <button class="clear-week-btn" onclick="clearWeek()">🗑 Limpiar semana</button>
+    </div>
+    <div class="week-grid" id="week-grid"></div>
+    <div class="week-summary">
+      <h3>📊 Resumen de la semana</h3>
+      <div class="summary-list" id="week-summary-list"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: QUE HAGO HOY -->
+  <div class="page" id="page-quehoy">
+    <div class="page-header">
+      <h1>¿Qué puedo hacer?</h1>
+      <p>Escribe los ingredientes que tienes en casa y te digo qué recetas puedes preparar.</p>
+    </div>
+    <div class="pantry-input-area">
+      <h3>Ingredientes disponibles</h3>
+      <div class="pantry-chips" id="pantry-chips"></div>
+      <div class="pantry-add-row">
+        <input type="text" id="pantry-ing-input" placeholder="Ej: pollo, frijoles, arroz..." onkeydown="if(event.key==='Enter')addPantryIng()">
+        <button class="pantry-add-btn" onclick="addPantryIng()">+ Agregar</button>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;" id="quick-ings"></div>
+    </div>
+    <div class="recipes-match">
+      <h3 id="match-title">Agrega ingredientes para ver resultados</h3>
+      <div class="match-grid" id="match-results"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: DESPENSA -->
+  <div class="page" id="page-despensa">
+    <div class="page-header">
+      <h1>Mi Despensa</h1>
+      <p>Lista de compras con precios, cantidades y zonas de supermercado.</p>
+    </div>
+    <div class="despensa-stats" id="despensa-stats"></div>
+    <div class="despensa-controls">
+      <button class="add-row-btn" onclick="addDespensaRow()">+ Agregar producto</button>
+      <div class="filter-row">
+        <select class="filter-select" id="filter-zona" onchange="renderDespensa()">
+          <option value="">Todas las zonas</option>
+          <option>Verduras y Frutas</option>
+          <option>Carnicería</option>
+          <option>Salchichonería</option>
+          <option>Congelados</option>
+          <option>Lácteos</option>
+          <option>Abarrotes</option>
+          <option>Panadería</option>
+          <option>Pasillo</option>
+          <option>Otros</option>
+        </select>
+        <select class="filter-select" id="filter-super" onchange="renderDespensa()">
+          <option value="">Todos los supermercados</option>
+          <option>Walmart</option>
+          <option>HEB</option>
+          <option>Soriana</option>
+          <option>Chedraui</option>
+          <option>La Comer</option>
+          <option>Bodega Aurrera</option>
+          <option>Costco</option>
+          <option>Otro</option>
+        </select>
+        <button class="export-btn" onclick="exportDespensa()">📋 Copiar lista</button>
+        <button class="export-btn" onclick="clearComprados()">✅ Limpiar comprados</button>
+      </div>
+    </div>
+    <div class="despensa-table-wrap">
+      <table class="despensa-table">
+        <thead>
+          <tr>
+            <th>✓</th>
+            <th>Producto</th>
+            <th>Zona</th>
+            <th>Pasillo</th>
+            <th>Cantidad</th>
+            <th>Unidad</th>
+            <th>Supermercado</th>
+            <th>Precio</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="despensa-tbody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:8px;gap:16px;">
+      <span style="font-size:0.88rem;color:var(--text-muted);">Total estimado: <strong id="total-price" style="color:var(--verde);font-size:1rem;">$0.00</strong></span>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RECETA -->
+<div class="modal-overlay" id="recipe-modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="recipe-modal">
+    <button class="modal-close" onclick="closeRecipeModal()">✕</button>
+    <h2 id="modal-name"></h2>
+    <div class="modal-kcal" id="modal-macros"></div>
+    <div class="modal-section">
+      <h3>Ingredientes</h3>
+      <ul class="ing-list" id="modal-ingredients"></ul>
+    </div>
+    <div class="modal-section">
+      <h3>Procedimiento</h3>
+      <ol class="proc-list" id="modal-procedure"></ol>
+    </div>
+    <button class="add-to-plan-btn" id="modal-add-plan-btn">📅 Agregar al planeador</button>
+  </div>
+</div>
+
+<!-- MODAL SELECTOR RECETAS (planeador) -->
+<div class="modal-overlay" id="selector-modal-overlay" onclick="closeSelectorModal(event)">
+  <div class="modal selector-modal" id="selector-modal">
+    <button class="modal-close" onclick="closeSelectorModal()">✕</button>
+    <h2 style="font-family:'Playfair Display',serif;color:var(--verde);margin-bottom:8px;">Elegir receta</h2>
+    <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:14px;" id="selector-context"></p>
+    <input class="selector-search" type="text" placeholder="Buscar receta..." oninput="filterSelector(this.value)">
+    <div class="selector-cats" id="selector-cats"></div>
+    <div class="selector-grid" id="selector-grid"></div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// DATA: TODAS LAS RECETAS
+// ================================================================
+const RECETAS = [
+  // ===== PREPARACIONES =====
+  {id:1, cat:'prep', nombre:'Frijoles con Veneno pero Saludables',
+   kcal:null, macros:'',
+   ingredientes:['1 chile cascabel/mirasol','1 chile ancho/pasilla','1 diente de ajo','¼ de cebolla','1 hoja de laurel','1 cda de orégano','1 cda de consomé vegetal','Frijoles molidos (bajos en grasa)'],
+   procedimiento:['Le quitas la raíz a los chiles, los cortas a la mitad, y les sacas las semillas y venas.','Hierves los chiles con la cebolla y hoja de laurel, hasta suaves. Licuas con los demás ingredientes.','Agregas agua de la cocción poco a poco según se vaya creando una pasta homogénea pero líquida, que chorreé.','Este adobo lo puedes echar directamente a los frijoles para guardarlos y tenerlos listos. O puedes guardarlo por separado.']
+  },
+  {id:2, cat:'prep', nombre:'Cómo hacer Lentejas',
+   kcal:null, macros:'',
+   ingredientes:['1 taza lentejas secas (hace 3 tazas cocidas)','4 tazas de agua por cada taza seca'],
+   procedimiento:['Por cada taza de lentejas secas, pon 4 tazas de agua a hervir.','Una vez que hierva echa las lentejas sin remojar previamente.','Tapa la olla y baja el fuego a lento por 20 min.','Checa si están suaves y listo.']
+  },
+  {id:3, cat:'prep', nombre:'Cómo hacer Garbanzos',
+   kcal:null, macros:'',
+   ingredientes:['Garbanzos secos','Agua','Bicarbonato de sodio'],
+   procedimiento:['Remojar los garbanzos secos en abundante agua con bicarbonato de sodio 8 horas antes.','Lavar bien los garbanzos tirando el agua anterior, pasarlos al chorro de agua.','Pasar a una olla, echar el doble de agua y esperar a que hierva.','Tapar y bajar el fuego por 1-2 hrs. Checar suavidad.']
+  },
+  {id:4, cat:'prep', nombre:'Arroz que no Engorde',
+   kcal:null, macros:'',
+   ingredientes:['1 taza arroz seco (hace 2 tazas cocido)','Cebolla, ajo, morrón o tomate al gusto','Consomé vegetal o de tomate'],
+   procedimiento:['NO freír el arroz (duplica las calorías).','Si vas a picar cebolla, ajo, morrón o tomate, échalos junto con el arroz a hervir.','El consomé que utilices sea vegetal o de tomate, échaselo como siempre.','Cada taza de arroz seco hace 2 tazas de arroz cocido.']
+  },
+  {id:5, cat:'prep', nombre:'Soya Texturizada Sabor Res',
+   kcal:null, macros:'',
+   ingredientes:['33g soya texturizada seca (= 100g hidratada = 100g carne molida)','Agua','Salsa de soya','Limón','Pimienta limón','Ajo en polvo'],
+   procedimiento:['Mide tu porción de soya seca (33g secos = 100g hidratados).','Hidrátala con suficiente agua al tiempo por 10 minutos.','Cambiar agua 2 veces exprimiendo la soya para quitarle el color amarillento.','Marinar con salsa de soya, limón, pimienta limón y ajo en polvo al gusto.']
+  },
+  // ===== DESAYUNOS =====
+  {id:10, cat:'desayuno', nombre:'Bowl Avena', kcal:360, macros:'17P 14F',
+   ingredientes:['45g de avena','1 plátano rebanado','200ml leche vegetal/light','15g (2 cucharadas) linaza en polvo'],
+   procedimiento:['Calentar avena en olla/microondas con agua al gusto, una vez cocida agregar leche.','Rebanar 1 plátano en rodajas y decorar encima de la avena con 2 cdas de linaza en polvo.']
+  },
+  {id:11, cat:'desayuno', nombre:'Avena con Jugo Verde', kcal:550, macros:'21P 22F',
+   ingredientes:['45g de avena','1 plátano rebanado','200ml leche vegetal/light','15g (2 cdas) linaza en polvo','1 taza de piña picada','4 hojas espinacas','1 naranja','½ limón','½ manzana'],
+   procedimiento:['Desinfectar espinaca.','Exprimir naranja y limón en licuadora. Rebanar manzana y piña.','Licuar todo agregando agua al gusto. Se puede agregar 1 sobresito de endulzante sin calorías.','Calentar avena en olla/microondas con agua, una vez cocida agregar leche.','Rebanar 1 plátano en rodajas y decorar encima de la avena con linaza.']
+  },
+  {id:12, cat:'desayuno', nombre:'Avocado Toast', kcal:570, macros:'15P 20F',
+   ingredientes:['3 rebanadas pan tostado integral','1 aguacate molido','½ tomate picado','1 cda cebolla picada','Sal y pimienta'],
+   procedimiento:['Machacar aguacate con tomate y cebolla picada.','Tostar pan y untar encima el guacamole.']
+  },
+  {id:13, cat:'desayuno', nombre:'Bagel Salado', kcal:372, macros:'18P 4F',
+   ingredientes:['1 bagel salado','4 hojas de espinaca','10g queso crema','1 reb jamón','½ tomate rebanado'],
+   procedimiento:['Desinfectar espinaca y rebanar tomate.','Untar queso crema en el bagel por ambos lados interiores, empalmar la espinaca, el tomate, y el jamón.']
+  },
+  {id:14, cat:'desayuno', nombre:'Bolitas de Energía', kcal:418, macros:'21P 8F',
+   ingredientes:['25g avena','1 dátil','37.5ml leche vegetal','33g crema cacahuate','7g proteína en polvo','1 cda linaza','12g chispas de chocolate','¼ cdita canela'],
+   procedimiento:['Picar dátiles finamente.','Licuar avena hasta polvo fino.','Mezclar todos los ingredientes en un tazón e ir echando leche poco a poco hasta poder hacer bolitas con consistencia seca y firme.']
+  },
+  {id:15, cat:'desayuno', nombre:'Chilaquiles', kcal:510, macros:'15P 18F',
+   ingredientes:['½ aguacate','50g totopos (medir según empaque)','100g o 1/2 taza de frijoles refritos/cocidos','200g salsa verde/roja para chilaquiles'],
+   procedimiento:['Pesar los totopos. Calentar la salsa en sartén/microondas. Decorar encima de los totopos.','Calentar los frijoles con un poco de agua en sartén/microondas.','Cortar aguacate por la mitad y sacar rebanadas, decorar encima de los frijoles.']
+  },
+  {id:16, cat:'desayuno', nombre:'Claras con Ejotes y Champiñones', kcal:190, macros:'14P 4F',
+   ingredientes:['100ml clara de huevo','2 champiñones frescos','100g ejotes congelados','240ml jugo de naranja'],
+   procedimiento:['Rebanar champiñones y dorar con las claras de huevo.','Sazonar al gusto con pimienta y sal.','Hervir/calentar en microondas en agua los ejotes congelados.']
+  },
+  {id:17, cat:'desayuno', nombre:'Claras con Ejotes y Frijoles', kcal:275, macros:'21P 9F',
+   ingredientes:['100ml clara de huevo','100g frijoles refritos enlatados','100g ejotes congelados','240ml de jugo de naranja'],
+   procedimiento:['En un sartén cocer los ejotes e incorporar las claras hasta que estén cocidas.','Sazonar al gusto con sal y pimienta.','Calentar los frijoles con un poco de agua en sartén/microondas.']
+  },
+  {id:18, cat:'desayuno', nombre:'Claras con Nopales y Fruta', kcal:200, macros:'14P 6F',
+   ingredientes:['50ml clara de huevo','1 huevo','100g nopales cocidos','1 fruta de preferencia'],
+   procedimiento:['Cocer nopales al gusto.','Freír las claras con el huevo.','Sazonar al gusto con pimienta y sal.']
+  },
+  {id:19, cat:'desayuno', nombre:'French Toast', kcal:480, macros:'37P 8F',
+   ingredientes:['4 rebanadas pan integral','1 huevo','150ml claras','1 cdita canela','100ml leche vegetal/light','1 cdita sal','1 sobresito de endulzante sin calorías','15g miel de maple light'],
+   procedimiento:['Mezclar claras y huevo con leche, canela y 1 sobresito de endulzante sin calorías.','Remojar los panes en la mezcla por ambos lados y pasar a un sartén con un poco de aceite para tostar.','Echar la mezcla restante en los panes en el sartén.','Estar volteando hasta que queden dorados por fuera.','Decorar con miel de maple.']
+  },
+  {id:20, cat:'desayuno', nombre:'French Toast Vegano', kcal:420, macros:'38P 10F',
+   ingredientes:['4 rebanadas pan integral','20g proteína en polvo','100ml leche vegetal','1 cdita canela','1 sobresito de endulzante sin calorías','15g miel de maple light','1 cdita sal'],
+   procedimiento:['Mezclar proteína con leche, canela y 1 sobresito de endulzante sin calorías.','Remojar los panes en la mezcla por ambos lados y pasar a un sartén con un poco de aceite para tostar.','Echar la mezcla restante en los panes en el sartén.','Estar volteando hasta que queden dorados por fuera.','Decorar con miel de maple.']
+  },
+  {id:21, cat:'desayuno', nombre:'Frijolitos con Queso y Tortillas', kcal:470, macros:'13P 17F',
+   ingredientes:['140g frijoles refritos/enlatados','40g queso panela','4 tortillas'],
+   procedimiento:['Calentar/rebajar con agua los frijoles en un sartén/microondas.','Espolvorear queso encima de los frijoles.','Calentar tortillas en el sartén sin aceite y disfrutar.']
+  },
+  {id:22, cat:'desayuno', nombre:'Fruta Picada', kcal:220, macros:'3P 8F',
+   ingredientes:['1 mango','1 pepino','2 tazas sandía picada'],
+   procedimiento:['Picar mango y sandía en cubos medianos.','Pelar pepino y quitar puntas, y rebanar.','Aderezar con chile en polvo.']
+  },
+  {id:23, cat:'desayuno', nombre:'Hot Cakes', kcal:332, macros:'9P 5F',
+   ingredientes:['30g avena molida','30g harina para hot cakes','1 reb margarina','20ml miel maple light','40g plátano machacado','60ml leche vegetal/light','8ml aceite'],
+   procedimiento:['Machacar 40g de plátano sin cáscara en un plato hondo.','Moler 30g de avena en licuadora.','Agregar 60ml de leche vegetal y 8ml de aceite a la mezcla. Agregar 30g de avena molida y 30g de harina para hot cakes.','Mezclar poco para que estén esponjosos, y dejar reposar si los prefieres delgados.','Freír en un sartén antiadherente, o con un poco de aceite en fuego bajo por 7min por lado.','Añadir margarina y miel de maple light una vez servido.']
+  },
+  {id:24, cat:'desayuno', nombre:'Huevo a la Mexicana', kcal:422, macros:'25P 16F',
+   ingredientes:['2 huevos','Sal pimienta','½ tomate picado','¼ cebolla picada','1 serrano picado','100g frijoles en bola','3 tortillas'],
+   procedimiento:['Picar verduras y sofreír con unas gotitas o 1 segundo de spray de aceite.','Añadir los huevos.','Sazonar con sal y pimienta.','Acompañar con frijoles en bola y tortillas directamente al comal sin aceite.']
+  },
+  {id:25, cat:'desayuno', nombre:'Huevito con Ejotes y Champiñones', kcal:182, macros:'15P 4F',
+   ingredientes:['2 huevos','2 champiñones frescos','100g ejotes congelados'],
+   procedimiento:['Rebanar champiñones y dorar con los dos huevos. Sazonar al gusto con pimienta y sal.','Hervir/calentar en microondas en agua los ejotes congelados.']
+  },
+  {id:26, cat:'desayuno', nombre:'Huevos Rancheros', kcal:380, macros:'21P 10F',
+   ingredientes:['2 tostadas maíz horneadas','2 huevos escalfados','1 tomate','¼ serrano','½ diente de ajo','1/6 cebolla picada','10g queso fresco','1 cdita cilantro picado','50g frijoles cocidos'],
+   procedimiento:['Escalfar los huevos en una taza llena de agua: romper un huevo dentro del agua con cuidado de no romper la yema. Poner en el microondas por aprox. 40s hasta que la clara se haga sólida.','Picar los vegetales y sofreír en un sartén con AGUA en vez de aceite hasta que espese el líquido.','Decorar tostadas con salsa ranchera, huevo, queso fresco y cilantro picado fresco.','Acompañar con frijoles.']
+  },
+  {id:27, cat:'desayuno', nombre:'Huevo Revuelto con Papita y Frijol', kcal:647, macros:'28P 13F',
+   ingredientes:['2 huevos','1 papa pequeña picada','120g frijol refrito bajo en grasa','3 tortillas','1 cucharada de aceite'],
+   procedimiento:['Freír la papa picada finamente con sal, en el aceite hasta dorar, añadir el huevo y revolver.','Calentar los frijoles con un poco de agua en sartén/microondas.','Calentar tortillas directamente en el sartén y disfrutar.']
+  },
+  {id:28, cat:'desayuno', nombre:'Jugo para el Cerebro', kcal:200, macros:'8P 12F',
+   ingredientes:['1 zanahoria','¼ betabel','1 barra de apio','1 naranja','1 taza de espinacas','2 cucharadas de linaza molida'],
+   procedimiento:['Hervir betabel y zanahoria.','Partir en pedazos pequeños el betabel, zanahoria y apio para ayudar a licuar más fácilmente. Si la textura espesa no te gusta puedes filtrar un poco del jugo, pero no del todo para no perder la fibra.']
+  },
+  {id:29, cat:'desayuno', nombre:'Jugo Verde', kcal:170, macros:'4P 9F',
+   ingredientes:['1 taza de piña picada','4 hojas espinacas','1 naranja','½ limón exprimido','½ manzana'],
+   procedimiento:['Desinfectar espinaca.','Exprimir naranja y limón en licuadora.','Rebanar manzana y piña.','Licuar todo y agregar agua al gusto, se puede agregar endulzante sin calorías.']
+  },
+  {id:30, cat:'desayuno', nombre:'Licuado Avena', kcal:470, macros:'15P 16F',
+   ingredientes:['50g avena','1 pz fruta de preferencia','15g linaza en polvo','½ taza fresas congeladas','200ml leche vegetal/light'],
+   procedimiento:['Pulverizar avena y linaza en licuadora por sí solas. Hacer pulsos, parar y menear con cuchara y seguir licuando.','Añadir la leche y frutas medidas. Licuar y si es necesario añadir un poco de agua según el gusto.']
+  },
+  {id:31, cat:'desayuno', nombre:'Licuado Papaya y Chía', kcal:352, macros:'16P 15F',
+   ingredientes:['45g avena','50g papaya','15g chía','½ taza fresas congeladas','200ml leche vegetal/light'],
+   procedimiento:['Licuar todos los ingredientes y agregar agua si necesitas una consistencia diferente.']
+  },
+  {id:32, cat:'desayuno', nombre:'Licuado Proteína Llenador', kcal:271, macros:'34P 9F',
+   ingredientes:['1 scoop proteína favorita','50g plátano','15g linaza','½ taza fresas','200ml leche vegetal/light'],
+   procedimiento:['Añadir proteína, linaza, la leche y frutas medidas.','Licuar y si es necesario añadir un poco de agua según el gusto.']
+  },
+  {id:33, cat:'desayuno', nombre:'Licuado Proteína Ligero', kcal:180, macros:'34P 3F',
+   ingredientes:['1 scoop proteína','200ml leche de soya/light'],
+   procedimiento:['Licuar en licuadora o shaker y si es necesario añadir un poco de agua según el gusto.']
+  },
+  {id:34, cat:'desayuno', nombre:'Lonche de Láminas', kcal:440, macros:'30P 8F',
+   ingredientes:['2 reb pan integral','1 calabacita en 4 láminas','1/8 cebolla en tiras','1 hoja de lechuga','100g de pechuga sin hueso rebanada','5g de mostaza','15g mayonesa','5ml de aceite','Sal','Pimienta'],
+   procedimiento:['Rebanar pechuga y calabacita en láminas largas, sazonar con sal y pimienta, y sofreír con unas gotitas o 1 segundo de spray de aceite.','Rebanar cebolla y lechuga desinfectada.','Untar mayonesa y mostaza en el pan.','Formar sandwich con cama de lechuga cebolla, encima láminas de calabacita y pollo.']
+  },
+  {id:35, cat:'desayuno', nombre:'Molletes', kcal:390, macros:'16P 12F',
+   ingredientes:['1 bolillo','100g Frijoles Refritos','30g chorizo de soya/pavo','10g Queso mozarella','20g tomate picado','10g cebolla picada','10g jalapeño picado','1 cda margarina'],
+   procedimiento:['Guisar chorizo con frijoles.','Tostar pan con margarina por dentro.','Rallar queso si es necesario.','Untar frijoles en pan, decorar con queso.','Picar fino el chile, tomate y cebolla y poner encima.']
+  },
+  {id:36, cat:'desayuno', nombre:'Nopales con Chorizo y Frijoles', kcal:415, macros:'16P 13F',
+   ingredientes:['100g nopales picados','20g chorizo de soya/pavo','120g frijoles refritos/enlatados','3 tortillas','250ml jugo de naranja natural'],
+   procedimiento:['Freír en muy poco aceite los nopales, después de que cambien de color añadir el chorizo en el centro del sartén hasta dorar y después mezclar.','Calentar los frijoles con un poco de agua en sartén/microondas.','Calentar tortillas directamente al sartén.']
+  },
+  {id:37, cat:'desayuno', nombre:'Pudín de Chía', kcal:414, macros:'13P 22F',
+   ingredientes:['4 cucharadas de chía','1½ plátanos','200ml de leche vegetal/light'],
+   procedimiento:['Coloca la chía dentro de la licuadora.','Vierte la leche de tu preferencia, y los plátanos pelados.','Licúa hasta obtener una consistencia de puré. Puedes agregar endulzante de stevia si deseas un sabor más intenso.','Refrigera mínimo 2 horas antes de servir.']
+  },
+  {id:38, cat:'desayuno', nombre:'Pudín de Chía y Avena', kcal:504, macros:'18P 25F',
+   ingredientes:['30g avena','40g chía','250ml leche vegetal/light','50ml agua','30ml miel maple light','1 cdta extracto de vainilla','1 plátano picado'],
+   procedimiento:['Mezclar todos los ingredientes en un vaso alto o topper alto. Fruta picada hasta arriba.','Dejar reposar en refrigerador toda la noche o mínimo 2 horas.']
+  },
+  {id:39, cat:'desayuno', nombre:'Quesadilla Saludable', kcal:596, macros:'31P 6F',
+   ingredientes:['1 tortilla harina 60g','½ aguacate','1 rebanada queso americano','50g jamón','1 huevo','100g claras de huevo','½ cebolla','1 cda aceite'],
+   procedimiento:['Picar el jamón y cebolla. Sofreír con unas gotitas o 1 segundo de spray de aceite.','Añadir el huevo y las claras. Una vez sólidos añadir el queso americano picado.','Calentar la tortilla de harina en el comal. Pasar a un plato y rellenar con el guiso y aguacate.']
+  },
+  {id:40, cat:'desayuno', nombre:'Quinoa con Leche', kcal:480, macros:'17P 12F',
+   ingredientes:['½ taza quinoa seca','½ cdta esencia de vainilla','¼ cdita canela en polvo','100ml leche vegetal/light','15ml miel de maple light','1 pz de plátano','½ cda linaza en polvo','1 cda nueces picadas'],
+   procedimiento:['Cocer quinoa según instrucciones del paquete.','En un bowl, añadir 1 taza de quinoa cocida, la leche, canela en polvo, esencia de vainilla y mezclar.','Decorar con miel, fruta, linaza y nueces.']
+  },
+  {id:41, cat:'desayuno', nombre:'Sándwich de Rice Cakes', kcal:272, macros:'34P 1F',
+   ingredientes:['30g proteína en polvo','15ml miel de maple light','1 sobresito de endulzante sin calorías','4 rebanadas de rice cakes','1 cdita canela','30ml claras de huevo'],
+   procedimiento:['Poner el polvo de proteína en un bowl pequeño y mezclar con la miel y el endulzante hasta que se haga una consistencia como crema de maní.','Mezclar en otro tazón las claras de huevo con la canela.','Sumergir rice cakes en las claras por ambos lados hasta absorber todo.','Acomodarlos en un plato grande y embarrar de la mezcla de proteína. Hacer 2 sándwiches.','En un sartén a fuego bajo usar unas gotitas o 1 segundo de spray de aceite y dorar por ambos lados.']
+  },
+  {id:42, cat:'desayuno', nombre:'Sándwich Plátano y Crema de Maní', kcal:448, macros:'15P 8F',
+   ingredientes:['2 rebanadas pan integral','1 plátano','30g de crema de cacahuate'],
+   procedimiento:['Rebanar plátano en rodajas o láminas.','Tostar pan (opcional) en comal o tostador.','Untar crema de cacahuate y añadir plátano.']
+  },
+  {id:43, cat:'desayuno', nombre:'Smoothie Bowl', kcal:495, macros:'12P 17F',
+   ingredientes:['2 plátanos congelados en rebanadas','1 taza de piña','30g avena','15g linaza molida','½ taza agua natural','2 tazas de espinacas'],
+   procedimiento:['Licuar todo y si es necesario ayudar con una espátula para que bajen los ingredientes al vórtex de la licuadora.']
+  },
+  {id:44, cat:'desayuno', nombre:'Tacos de Papa y Frijol con Chorizo', kcal:551, macros:'16P 13F',
+   ingredientes:['5 tortillas de maíz','100g de papa','½ taza frijoles refritos/enlatados bajos en grasa','30g chorizo soya/pavo','1 cda aceite canola','Salsa para tacos'],
+   procedimiento:['Pesar 100g de papa, picar en cubitos y pasar a hervir hasta antes de estar traspasable con un tenedor.','Dorar el chorizo ya pesado con el aceite y separar la mitad para guisar con los frijoles y la mitad para guisar con la papa ya escurrida.','Servir en tortillas.']
+  },
+  {id:45, cat:'desayuno', nombre:'Tofu a la Mexicana', kcal:471, macros:'22P 17F',
+   ingredientes:['110g tofu','1 cdita cúrcuma y paprika','Sal pimienta','½ tomate picado','¼ cebolla picada','1 serrano picado','100g frijoles refritos/enlatados','3 tortillas'],
+   procedimiento:['Picar verduras y sofreír con unas gotitas o 1 segundo de spray de aceite.','Añadir el tofu y desmoronar.','Sazonar con sal, cúrcuma, paprika y pimienta.','Acompañar con frijoles en bola o refritos y tortillas directamente al comal sin aceite.']
+  },
+  {id:46, cat:'desayuno', nombre:'Yogur con Amaranto y Fruta', kcal:345, macros:'10P 6F',
+   ingredientes:['1 botesito o 150g yogurt griego/de almendra','30g amaranto inflado','1 pz de fruta favorita'],
+   procedimiento:['Servir amaranto encima del yogurt.','Incorporar la fruta de tu elección.']
+  },
+  {id:47, cat:'desayuno', nombre:'Yogur con Granola y Fruta', kcal:350, macros:'14P 5F',
+   ingredientes:['1 botesito o 150g yogurt griego/de almendra','30g granola','1 pz de fruta favorita'],
+   procedimiento:['Servir granola encima del yogurt.','Incorporar la fruta de tu elección.']
+  },
+  // ===== COMIDAS =====
+  {id:50, cat:'comida', nombre:'Albóndigas de Lenteja', kcal:472, macros:'29P 4F',
+   ingredientes:['160g lentejas cocidas','1 cda zanahoria rallada','1 cda papa rallada','1 cda cilantro picado','1 cda pan molido','80g pasta','100g puré'],
+   procedimiento:['Separar las piedras de las lentejas secas y cocerlas.','Colar lentejas y dejar enfriar y secar muy bien.','Rallar papa y zanahoria crudas en tiras finitas, picar finamente cilantro ya desinfectado. Escurrir bien con servilleta.','Machacar lentejas con tenedor/machacador y mezclar con verduras. Añadir pan molido hasta consistencia firme. Salar y sazonar con pimienta.','Formar medallones pequeños con la mezcla de lentejas, sofreír con aceite hasta doradas.','Cocer pasta al punto y mezclar con puré, poner las albóndigas por encima.']
+  },
+  {id:51, cat:'comida', nombre:'Alitas de Coliflor', kcal:663, macros:'32P 1F',
+   ingredientes:['15 floretes de coliflor','Harina y agua','Pan Molido','Salsa alitas Ranch','Aceite para freír'],
+   procedimiento:['Cortar la coliflor en floretes medianos, desinfectar y dejar secarlas en un colador.','Echar a un contenedor harina e ir echando agua poco a poco hasta consistencia de mezcla de hot cakes espesa.','Bañar la coliflor en la mezcla de harina y pasar a otro plato con pan molido para empanizar.','Freír en aceite profundo en sartén por todos lados hasta crujientes (café claro).','Bañar con salsa de alitas calentada en el microondas.']
+  },
+  {id:52, cat:'comida', nombre:'Bowl de Hamburguesa', kcal:422, macros:'31P 6F',
+   ingredientes:['100g carne molida 95%','¼ cebolla','25g arroz seco','2 hojas de lechuga','½ tomate picado','½ aguacate','5g mostaza','10ml catsup','10g yogurt griego','1 pepinillo picado','1 rebanada queso americano'],
+   procedimiento:['Cocer arroz según instrucciones del paquete.','Sofreír carne con unas gotitas o 1 segundo de spray de aceite.','Picar en cubos grandes ¼ de cebolla y añadir a la carne, picar queso americano y mezclar con la carne hasta cocida.','Picar pepinillo y mezclar con yogurt, catsup y mostaza para hacer aderezo.','Servir en un tazón arroz, lechuga, tomate y aguacate, guiso de carne y aderezo.']
+  },
+  {id:53, cat:'comida', nombre:'Bowl de Pollo', kcal:546, macros:'30P 9F',
+   ingredientes:['120g pechuga sin hueso','1 huevo','½ cebolla','200g vegetales congelados','1 papa'],
+   procedimiento:['Picar papa y cebolla en cubos pequeños, pechuga en pedazos grandes.','Dorar papa con unas gotitas o 1 segundo de spray de aceite.','Una vez tostada por fuera, añadir cebolla y pechuga, sazonar.','Pesar vegetales y añadirlos directamente al guiso con un huevo y mezclar.','Servir todo junto.']
+  },
+  {id:54, cat:'comida', nombre:'Burrito de Lentejas con Guacamole', kcal:630, macros:'22P 20F',
+   ingredientes:['¼ cebolla picada','½ tomate picado','1 chile morita','30g lentejas secas','1 cdita comino','1 cdita ajo en polvo','1 limón','¼ cdita paprika','1 tortilla harina grande','1 hoja de lechuga','½ aguacate','¼ taza repollo picado','¼ pimiento morrón crudo rebanado'],
+   procedimiento:['Separar lentejas secas de piedras.','Cocer lentejas: por cada taza añadir 4 tazas de agua. Hervir, tapar y poner a fuego bajo por 25min.','Picar cebolla y tomate y sofreír con unas gotitas de spray. Sazonar con comino, ajo en polvo y paprika.','Añadir lentejas cocidas al guiso y mezclar con limón.','Desinfectar repollo y rebanar junto con el pimiento morrón.','Calentar tortilla de harina grande en comal, rellenar de guiso, aguacate, repollo y pimiento crudos.']
+  },
+  {id:55, cat:'comida', nombre:'Calabacitas con Elote', kcal:533, macros:'24P 9F',
+   ingredientes:['100g Cortadillo de cerdo','1g ajo picado','10g cebolla picada','4g jalapeño picado','60g calabaza picada','30g lata chica elote','Pimienta Comino','30g tomate picado','50g puré tomate con caldo de elote y consomé vegetal','Salsa para tacos','4 tortillas'],
+   procedimiento:['Freír en una olla grande cebolla, calabaza, chile, después el ajo, elote, tomate picado, y añadir puré.','Sofreír cortadillo de cerdo hasta sellar con poco aceite y luego añadir verduras, puré y especias.']
+  },
+  {id:56, cat:'comida', nombre:'Carnita en Salsa Verde, Arroz y Frijoles con Tortillas', kcal:591, macros:'31P 12F',
+   ingredientes:['150g cortadillo de cerdo','13g cebolla rebanada','70g tomatillo','7g jalapeño chico','1 diente ajo','7g cebolla','5g manojo cilantro','½ taza de arroz cocido','1 cucharadita consomé rojo','100g frijoles bola/refritos','4 tortillas'],
+   procedimiento:['Hervir tomatillos, chiles, cebollas y ajo.','Licuar vegetales hervidos con cilantro y sal.','Sellar carne de cerdo en sartén.','Rebanar cebolla para freír en tiras.','Freír la cebolla rebanada, añadir la salsa verde con la carne y dejar reducir.','Preparar arroz sin freír de acuerdo a las instrucciones de la bolsa.']
+  },
+  {id:57, cat:'comida', nombre:'Ceviche de Tilapia', kcal:447, macros:'25P 7F',
+   ingredientes:['1 filete de tilapia','4 tostadas horneadas','½ tomate picado','5g Cilantro picado','1 barra Apio picado','1/6 Cebolla','1/6 Morrón','60g Catsup','1 Limón','Pimienta','Sal'],
+   procedimiento:['Cocer la tilapia a vapor o freidora de aire y desmenuzar.','Picar toda la verdura y añadir al pescado.','Añadir catsup, limón, sal y pimienta y mezclar.']
+  },
+  {id:58, cat:'comida', nombre:'Ceviche de Soya', kcal:454, macros:'22P 13F',
+   ingredientes:['33g de soya texturizada seca','4 tostadas','½ tomate picado','5g Cilantro picado','1 barra Apio picado','1/6 Cebolla','1/6 Morrón','60g Catsup','1 Limón','Pimienta Sal'],
+   procedimiento:['Hidratar soya, una vez suave, exprimir y cambiar agua como si fuera arroz, 2 veces.','Picar toda la verdura y añadir a la soya.','Añadir catsup, limón, sal y pimienta y mezclar.']
+  },
+  {id:59, cat:'comida', nombre:'Coctel de Garbanzo', kcal:484, macros:'15P 15F',
+   ingredientes:['100g garbanzo enlatado','100g puré tomate','50g catsup','1 cda cebolla picada','½ tomate picado','1 cda cilantro picado','2 paquetes (6 saladitas)','½ aguacate rebanado','1 limón'],
+   procedimiento:['Pesar 100g de garbanzo sin agua.','Picar los ingredientes y revolver con garbanzo, catsup y puré de tomate.']
+  },
+  {id:60, cat:'comida', nombre:'Cortadillo de Lentejas', kcal:571, macros:'26P 30F',
+   ingredientes:['60g lenteja seca','1 tomate','1 serrano','1/8 cebolla','1 ajo','Pimienta negra','Comino','Sal','100g frijoles refritos','30g arroz seco (1/6 taza)'],
+   procedimiento:['Hervir las lentejas hasta suaves y colar.','Sancochar chile, tomate, ajo y cebolla, una vez suaves licuar poco.','El chile puede ser con o sin semillas dependiendo del picor deseado.','Freír la salsa, las lentejas y dejar reducir. Añadir sal al gusto.','Arroz: lavar en olla de arrocera y cocer con sazonador vegetal.']
+  },
+  {id:61, cat:'comida', nombre:'Enfrijoladas', kcal:626, macros:'29P 16F',
+   ingredientes:['1 muslo hervido y desmenuzado','15g cebolla picada','1g ajo picado','¼ chile árbol seco','100g frijoles refritos','5 tortillas','15g queso panela','20ml crema ácida'],
+   procedimiento:['Hervir muslos, tirar agua, dejar enfriar, desmenuzar.','Picar cebolla y ajo, sofreírlo con los chiles, después echar a licuar con frijoles. Salar.','Calentar tortillas en comal sin aceite, rellenarlas del pollo y doblar a la mitad, bañar de salsa, queso y crema.']
+  },
+  {id:62, cat:'comida', nombre:'Ensalada de Atún', kcal:385, macros:'46P 8F',
+   ingredientes:['1 lata atún en agua','15g de mayonesa','½ tomate picado','2 hojas lechuga','1 cda cebolla picada','60g elote enlatado','1 cda jalapeño en vinagre','1 paquete galleta saladas'],
+   procedimiento:['Sacar el atún de la lata/bolsa.','Picar el tomate y cebolla en cubitos, la lechuga ya desinfectada en tiras delgadas, y mezclar con el atún, el elote y el jalapeño.','Medir mayonesa y revolver con todos los demás ingredientes.']
+  },
+  {id:63, cat:'comida', nombre:'Ensalada de Garbanzo', kcal:649, macros:'31P 31F',
+   ingredientes:['1 lata garbanzo','½ aguacate','½ tomate picado','2 hojas lechuga','1 cda cebolla picada','60g elote enlatado','1 cda jalapeño en vinagre','1 paquete galleta saladas'],
+   procedimiento:['Machacar los garbanzos de la lata con tenedor/machacador/cuchillo hasta consistencia de pedacitos de atún.','Picar el tomate y cebolla en cubitos, la lechuga ya desinfectada en tiras delgadas, y mezclar con el garbanzo, el elote y el jalapeño.','Aparte machacar la mitad del aguacate con un poco de limón y revolver con todos los demás ingredientes.']
+  },
+  {id:64, cat:'comida', nombre:'Ensalada de Nueces', kcal:382, macros:'15P 14F',
+   ingredientes:['50g lechuga romana','30g tomate picado','10g pepino rallado','10g zanahoria rallada','½ taza de lentejas cocidas','10g pepita de girasol','15g de nuez','20g crutones','15ml ranch light'],
+   procedimiento:['Poner a cocer lentejas. Colarlas.','Picar y rebanar todas las verduras ya lavadas y desinfectadas.','Triturar nuez pecana con cuchillo.','Revolver toda la ensalada.']
+  },
+  {id:65, cat:'comida', nombre:'Ensalada de Lentejas', kcal:405, macros:'14P 15F',
+   ingredientes:['½ taza lentejas cocidas','30ml ranch light','10 rebanadas de pepino','½ zanahoria rallada','2 hojas lechuga','½ tomate','30g elote en lata','30g crutones'],
+   procedimiento:['Cocer 1 taza de lentejas en 4 tazas de agua. Hervir y luego bajar el fuego por 20 minutos. Colar.','Rallar zanahoria, picar lechuga en pedazos grandes, rebanar pepino en medias lunas, picar tomate y añadir elote en lata y crutones, mezclar todo con lentejas.']
+  },
+  {id:66, cat:'comida', nombre:'Entomatadas', kcal:484, macros:'20P 11F',
+   ingredientes:['1 muslo hervido y desmenuzado','15g cebolla rebanada','200g jitomate','5 tortillas','15g panela','20ml crema ácida'],
+   procedimiento:['Hervir muslos, tirar agua, dejar enfriar, desmenuzar.','Licuar jitomates.','Rebanar cebolla y sofreírla en una olla, después echar los tomates licuados. Salar, dejar reducir.','Calentar tortillas en comal sin aceite, rellenarlas del pollo y doblar a la mitad, bañar de salsa, queso y crema.']
+  },
+  {id:67, cat:'comida', nombre:'Fajitas Portobello', kcal:440, macros:'9P 10F',
+   ingredientes:['1 portobello rebanado (pimienta limón, limón, ajo en polvo, salsa de soya)','100g camote picado (paprika)','1 cda aceite canola','100g mezcla vegetales congelados','1/3 cebolla','¼ pimiento morrón','1 reb margarina'],
+   procedimiento:['Rebanar en tiras portobello. Marinar con limón, pimienta limón, ajo en polvo. Freír en poco aceite o freidora de aire.','Picar camote en cubos medianos. Sancochar con poco aceite tapando el sartén hasta tostados. Echar un poco de agua al sartén para que se suavicen y sazonar con paprika y sal al final.','Rebanar cebolla en tiras, freír con poco aceite hasta transparentes y añadir verduras congeladas con margarina, cocerlas hasta transparentes añadiendo pimienta limón.']
+  },
+  {id:68, cat:'comida', nombre:'Fajitas de Pollo', kcal:584, macros:'19P 11F',
+   ingredientes:['150g pechuga sin hueso (pimienta limón, limón, ajo en polvo, salsa de soya)','100g camote picado (paprika)','1 cda aceite canola','100g mezcla vegetales congelados','1/3 cebolla','¼ pimiento morrón','1 reb margarina'],
+   procedimiento:['Rebanar en tiras pollo. Marinar con limón, pimienta limón, ajo en polvo. Freír en poco aceite o freidora de aire.','Picar camote en cubos medianos. Sancochar con poco aceite tapando el sartén hasta tostados. Echar un poco de agua para que se suavicen y sazonar con paprika y sal al final.','Rebanar cebolla y morrón en tiras, freír con poco aceite hasta transparentes y añadir verduras congeladas con margarina, cocerlas hasta transparentes añadiendo pimienta limón.']
+  },
+  {id:69, cat:'comida', nombre:'Garbancito en Salsa Roja', kcal:589, macros:'18P 19F',
+   ingredientes:['100g garbanzo enlatado','30g puré de tomate','60g tomate picado','33g cebolla rebanada','25g morrón rebanado','Pimienta negra','Cúrcuma','30g elote enlatado','15ml de aceite','25g arroz seco','1 cucharada consomé vegetal','50g nopales picados','10g chorizo de soya','10g tomate picado','10g cebolla picada'],
+   procedimiento:['Cocer arroz sin aceite según las instrucciones del paquete.','Rebanar cebolla y morrón en tiras.','Freír los vegetales hasta fragantes, añadir el garbanzo y especias.','Licuar el tomate con el puré, añadir al guiso y dejar reducir.','Servir arroz y garbanzo.','Para los nopales: lavar y picar verduras. Freír nopales unos minutos, agregar chorizo y cebolla en medio para sofreír. Una vez transparente la cebolla agregar tomate y revolver.']
+  },
+  {id:70, cat:'comida', nombre:'Hamburguesa de Lentejas', kcal:631, macros:'22P 17F',
+   ingredientes:['1 bimbollo 150kcal','½ taza lentejas cocidas','1 cda zanahoria rallada','1 cda papa rallada','1 cda cilantro picado','1 cda pan molido','1 cda aceite','2 hojas lechuga','3 reb tomate','1 rebanada cebolla','1 reb queso bajo grasa','1/3 aguacate'],
+   procedimiento:['Separar lentejas secas de piedras.','Cocer lentejas en 4 tazas de agua por cada taza. Hervir, tapar y poner a fuego bajo por 25 min.','Colar lentejas y dejar enfriar y secar muy bien.','Rallar papa y zanahoria crudas en tiras finitas, picar finamente cilantro. Escurrir bien.','Machacar lentejas con tenedor, mezclar con verduras, añadir pan molido hasta consistencia firme. Salar y sazonar.','Formar medallones medianos con la mezcla, sofreír con aceite hasta dorados.','Formar hamburguesas con lechuga, tomate rebanado, cebolla, aguacate y queso.']
+  },
+  {id:71, cat:'comida', nombre:'Lentejas con Camote, Puré y Verduras', kcal:636, macros:'26P 28F',
+   ingredientes:['50g lentejas secas y limpias','150g camote en cubos','5g cilantro picado','1 cucharadita consomé vegetal','20g Hojuelas de papa','60ml Agua hirviendo','1/8 cdta sal','5g margarina','15ml aceite','100g mezcla vegetales congelados','30g cebolla','25g morrón','Pimienta limón'],
+   procedimiento:['Picar camote.','Medir lentejas, buscar piedras, limpiar, hervir junto con camote picado y consomé vegetal.','Ya hervido, añadir el cilantro picado y sal al gusto.','Preparar puré según instrucciones del paquete.','Rebanar cebolla y morrón en tiras, freír con aceite hasta transparentes y añadir verduras congeladas con margarina, cocerlas hasta transparentes añadiendo pimienta limón.']
+  },
+  {id:72, cat:'comida', nombre:'Medallones de Lenteja, Camote y Verduras', kcal:613, macros:'21P 26F',
+   ingredientes:['160g lentejas cocidas','1 cda zanahoria rallada','1 cda papa rallada','1 cda cilantro picado','1 cda pan molido','120g camote hervido','100g verduras california','1 reb margarina','1 cda aceite'],
+   procedimiento:['Separar lentejas secas de piedras.','Cocer lentejas en 4 tazas de agua por cada taza. Hervir, tapar y poner a fuego bajo por 25 min.','Colar lentejas y dejar enfriar y secar muy bien.','Rallar papa y zanahoria crudas en tiras finitas, picar finamente cilantro. Escurrir bien.','Machacar lentejas con tenedor, mezclar con verduras, añadir pan molido hasta consistencia firme. Salar y sazonar.','Formar medallones pequeños con la mezcla, sofreír con aceite hasta dorados.','Descongelar verduras california, pasar a un sartén con aceite hasta dorar. Añadir una rebanada de margarina al final.','Pesar camote ya lavado, picarlo con todo y cáscara y hervirlo hasta suave. Salar una vez escurrido.']
+  },
+  {id:73, cat:'comida', nombre:'Nachos Hummus, Frijoles y Aguacate', kcal:663, macros:'16P 22F',
+   ingredientes:['100g frijoles refritos enlatados','½ paquete de hummus','½ aguacate','Pico de gallo','50g totopos'],
+   procedimiento:['Picar cebolla, tomate y cilantro para el pico de gallo con limón y sal.','Machacar medio aguacate y mezclar con el pico de gallo.','Servir porción de hummus y frijoles.','Disfrutar con totopos.']
+  },
+  {id:74, cat:'comida', nombre:'Papa Asada', kcal:689, macros:'29P 6F',
+   ingredientes:['200g de papa','Sal Margarina','70g carne molida 90/10','33g cebolla','25g Morrón','5ml Aceite','½ reb jamón de pavo','2 Paquetes de galletas saladas','15g Queso americano rallado'],
+   procedimiento:['Hervir papas cortadas a la mitad hasta traspasable. Pasar a un contenedor, machacar con margarina y sal hasta molidas.','Freír carne con cebolla y morrón rebanados, espolvorear queso encima del guiso, poner encima de la papa.','Picar el jamón en cuadritos, poner encima de la carne.']
+  },
+  {id:75, cat:'comida', nombre:'Pechuga, Puré y Verduras', kcal:472, macros:'22P 10F',
+   ingredientes:['1 pechuga de 120g','30g puré papa','100g vegetales congelados','1 reb margarina','1 cda aceite','Pimienta limón'],
+   procedimiento:['Descongelar vegetales congelados, pasar a un sartén con aceite hasta dorar. Añadir una rebanada de margarina al final para que derrita y dore, sazonar con pimienta limón.','Instrucciones de puré de papa en el empaque.','Sazonar pechuga con pimienta limón. Dorar en sartén con poco aceite.','Se puede acompañar el pollo con medio limón.']
+  },
+  {id:76, cat:'comida', nombre:'Pescado a la Plancha', kcal:480, macros:'37P 6F',
+   ingredientes:['100g Tilapia','100g vegetales congelados','1 cuadrito margarina','1 cda aceite','½ taza arroz cocido','10 rebanadas de cebolla'],
+   procedimiento:['Descongelar vegetales congelados, pasar a un sartén con aceite hasta dorar. Añadir una rebanada de margarina al final, sazonar con pimienta limón.','Instrucciones de puré de papa en el empaque.','Sazonar pescado y cebolla con pimienta limón. Dorar en sartén con poco aceite.','Se puede acompañar el pescado con medio limón.']
+  },
+  {id:77, cat:'comida', nombre:'Pescado al Vapor', kcal:480, macros:'37P 6F',
+   ingredientes:['100g Tilapia','100g mezcla california','1 cuadrito margarina','1 cda aceite','½ taza arroz cocido','10 rebanadas de cebolla'],
+   procedimiento:['Descongelar verduras california, pasar a un sartén con aceite hasta dorar. Añadir una rebanada de margarina al final, sazonar con pimienta limón.','Instrucciones de arroz en el empaque.','Envolver pescado y cebolla rebanada en aluminio, sazonar con pimienta limón y un poco de margarina. Poner en baño maría.','Se puede acompañar el pescado con medio limón.']
+  },
+  {id:78, cat:'comida', nombre:'Picadillo de Champiñones', kcal:560, macros:'15P 16F',
+   ingredientes:['5 tortillas','2 tomates molido','1/8 cebolla','1 cda perejil fresco','Sal','1 cda de aceite','¼ cebolla picada','½ papa picada','½ zanahoria picada','6 pz champiñones frescos picados','1 puñado de espinacas'],
+   procedimiento:['Licuar tomates con cebolla y perejil.','Picar cebolla, papa y zanahoria y sofreír con unas gotitas o 1 segundo de spray de aceite.','Añadir champiñones frescos picados hasta suaves, agregar salsa de tomate y salar.','Agregar espinacas para que se cosan.','Servir en tortillas directamente del comal.']
+  },
+  {id:79, cat:'comida', nombre:'Pollo a la Parmesana', kcal:340, macros:'22P 5F',
+   ingredientes:['½ pechuga de pollo','1 taza de salsa para pizza','2 cucharadas de queso mozarella bajo en grasa','Pimienta limón','150g mezcla de vegetales congelados','1 reb margarina'],
+   procedimiento:['Rebanar la pechuga a la mitad para que quede delgada en forma de corazón, sazonar con pimienta limón y sal.','Poner pechuga a la plancha o en freidora de aire.','Calentar salsa para pizza junto con el queso mozarella para que derrita en microondas o sartén y pasar encima de la pechuga ya cocida.','Descongelar verduras, pasar a un sartén con aceite hasta dorar. Añadir una rebanada de margarina al final, sazonar con pimienta limón.']
+  },
+  {id:80, cat:'comida', nombre:'Pollo Guisado', kcal:631, macros:'25P 13F',
+   ingredientes:['1 pechuga de 120g','Guisada de tu manera favorita','½ taza arroz','4 tortillas','100g mezcla vegetales congelados','1 reb margarina','1 cda aceite canola','Pimienta limón'],
+   procedimiento:['Descongelar verduras, pasar a un sartén con aceite hasta dorar. Añadir una rebanada de margarina al final, sazonar con pimienta limón.','Instrucciones de arroz del empaque. Para 1 taza cocida se necesita ½ taza seca.','Picar o desmenuzar la pechuga y guisarla de tu manera favorita en salsas de tomate o de ese estilo.']
+  },
+  {id:81, cat:'comida', nombre:'Pollo y Calabaza Chino', kcal:445, macros:'22P 7F',
+   ingredientes:['120g pechuga sin hueso','1 pz calabaza en cuartos','4 champiñones en cuartos','¼ cebolla en cubos','½ zanahoria en láminas','15ml aceite','1g sazonador sabor pollo','5ml salsa de soya','5ml salsa anguila','1 taza arroz cocido'],
+   procedimiento:['Cocer al vapor calabacita y zanahoria hasta tiernos.','Rebanar el pollo en cubos.','Marinarlo en ajo en polvo, limón.','Sellar pollo con cebolla y champiñones y añadir teriyaki y salsa de soya, al final agregar verduras.','Seguir instrucciones de arroz del paquete.']
+  },
+  {id:82, cat:'comida', nombre:'Pozole de Portobello', kcal:437, macros:'13P 15F',
+   ingredientes:['1 pieza de portobello','2 cucharadas aceite canola','¼ ajo picado','1/8 cebolla blanca','40g garbanzo enlatado','Caldo de vegetales/pollo','Lechuga picada, rábano, laurel, epazote, pimienta, sal, guajillo, 3 tostadas/tortillas'],
+   procedimiento:['Mezcla en un tazón el aceite, el ajo y el epazote. Barniza los portobellos y cocina en sartén bien caliente hasta que se doren. Retira y corta en cubos chicos.','Calienta en una olla el ajo y la cebolla durante 5 minutos. Añade el garbanzo y cocina un par de minutos. Incorpora los portobellos, el agua, laurel, pimientas y sal. Hierve a fuego medio. Baja el fuego y continúa la cocción durante 20 minutos.','Hidrata los chiles hirviéndolos. Licuar los chiles y el ajo con un poco del caldo del pozole. Vierte en la olla y continúa cocinando el pozole por 10 minutos más.']
+  },
+  {id:83, cat:'comida', nombre:'Sopa de Alubias', kcal:591, macros:'23P 25F',
+   ingredientes:['60g alubias secas','30g arroz seco','2 tomates licuados','1/6 cebolla','½ diente ajo','½ zanahoria','½ calabacita','1/6 cabeza de brócoli','½ limón','½ aguacate'],
+   procedimiento:['En una olla añadir las alubias y arroz y poner a hervir con ajo y cebolla y tomates molidos.','Una vez hirviendo añadir zanahoria picada, calabacita y floretes de brócoli.','Acompañar con aguacate y limón.']
+  },
+  {id:84, cat:'comida', nombre:'Sopa de Papa', kcal:480, macros:'19P 20F',
+   ingredientes:['½ lata garbanzo','½ morrón picado','2 cda cebolla picada','½ tomate picado','1 cda cilantro picado','1 papa en cubos','1 taza espinaca picada','1 limón'],
+   procedimiento:['Pesar 100g de garbanzo sin agua.','Picar el morrón y cebolla y freír con poco aceite.','Moler tomate en licuadora/molcajete. Añadirlo a la cebolla.','Agregar 3 tazas de agua con la papa en cubos con los garbanzos.','Añadir espinaca y cilantro una vez suave la papa y apagado el fuego.']
+  },
+  {id:85, cat:'comida', nombre:'Sopa de Tomate', kcal:461, macros:'25P 19F',
+   ingredientes:['600g tomate','100g cebolla','1 diente de ajo','Sal y pimienta','½ aguacate','120g pollo vegano'],
+   procedimiento:['Cortar la cebolla, el tomate y los dientes de ajo en pedazos medianamente grandes y sofreír con poco aceite, sal y pimienta hasta que queden bien dorados.','Dejar enfriar y meter a la licuadora todos los ingredientes hasta formar una pasta, luego añadir agua por si queda muy espesa, calentar y servir.','Al servir agregar por encima aguacate en cubos y pollo vegano.']
+  },
+  {id:86, cat:'comida', nombre:'Spaghetti Bolognesa', kcal:345, macros:'17P 5F',
+   ingredientes:['80g spaghetti integral','50g carne molida 90%','150g puré tomates','30g champiñones','1 diente de ajo picado','1 cda cebolla picada'],
+   procedimiento:['Poner a hervir spaghetti INTEGRAL hasta conseguir que esté suave.','Sofreír carne molida con poquito aceite, cebolla, ajo picado y champiñones.','Añadir puré a mezcla de carne.','Colar la pasta y revolverlo con la mezcla de carne.']
+  },
+  {id:87, cat:'comida', nombre:'Spaghetti Bolognesa Vegano', kcal:356, macros:'23P 10F',
+   ingredientes:['80g spaghetti integral','33g soya texturizada seca','150g puré tomates','30g champiñones','1 diente de ajo picado','1 cda cebolla picada'],
+   procedimiento:['Preparación de la soya: hidratar, una vez suave, exprimir y cambiar agua 2 veces. Marinar con salsa de soya, limón, pimienta limón, ajo en polvo.','Poner a hervir spaghetti INTEGRAL hasta conseguir que esté suave.','Sofreír soya hidratada con poquito aceite, cebolla, ajo picado y champiñones.','Añadir puré a mezcla de carne.','Colar la pasta y revolverlo con la mezcla de carne.']
+  },
+  {id:88, cat:'comida', nombre:'Spaghetti con Champiñones y Espinaca', kcal:420, macros:'21P 6F',
+   ingredientes:['80g spaghetti','50ml leche vegetal','60g champiñones','1 diente de ajo','10ml aceite de canola','10 hojas de espinaca','10g queso parmesano','Sal pimienta y consomé'],
+   procedimiento:['En una olla poner poco aceite, con el ajo y los champiñones a sofreír, luego añadir el caldo de vegetales con la leche vegetal, sal y pimienta.','Añadir la pasta a cocer hasta que quede al dente, revolviendo constantemente para que no se pegue.','Al servir añadir la espinaca y el queso y listo.']
+  },
+  {id:89, cat:'comida', nombre:'Tacos al Pastor (Champiñones)', kcal:539, macros:'10P 11F',
+   ingredientes:['½ chile ancho','½ chile guajillo','10g achiote','1 diente de ajo','¼ de cebolla','1 naranja','¼ taza de piña enlatada','2 cdas vinagre','1 cda aceite','Sal y Pimienta','250g champiñones frescos','5 tortillas','Salsa para tacos','1 cda cilantro picado','1 cda cebolla picada'],
+   procedimiento:['Hervir chile guajillo y ancho hasta suaves y sacar del agua.','Licuar achiote, ajo, 1 trozo de cebolla, el jugo de una naranja, piña enlatada, vinagre, aceite, sal y pimienta.','Sofreír con unas gotitas o 1 segundo de spray de aceite champiñones frescos y una vez suaves añadir el adobo hasta reducir.','Servir en tortillas directamente del comal y decorar con cilantro y cebolla picada.']
+  },
+  {id:90, cat:'comida', nombre:'Tortitas de Avena y Verduras', kcal:385, macros:'14P 16F',
+   ingredientes:['½ taza de avena','¼ taza agua caliente','½ zanahoria rallada','¼ chayote rallado','½ calabacita rallada','¼ cebolla picada','1 cda cilantro picado','½ cda chía remojada en 2 cda de agua','½ aguacate','½ taza arroz seco','100g mezcla de vegetales congelados'],
+   procedimiento:['Remojar chía.','Rallar zanahoria, chayote, calabacita y picar cebolla y cilantro.','Remojar avena con agua, una vez que se absorba y suavice la avena mezclar los vegetales y la chía.','Si es necesario agregar algo de pan molido para que pegue mejor.','Dorar con unas gotitas o 1 segundo de spray de aceite.','Cocer arroz sin freír con medidas que vengan en el paquete.','Descongelar verduras, pasar a un sartén con aceite hasta dorar. Añadir margarina al final, sazonar con pimienta limón.']
+  },
+  // ===== CENAS =====
+  {id:100, cat:'cena', nombre:'Burrito Bowl', kcal:342, macros:'17P 6F',
+   ingredientes:['20g Arroz seco','100g Frijoles cocidos','10g Jalapeños en rajas','100g pechuga sin hueso','20g Chiles chipotles en lata','15ml Aceite','15g Tomate picado','10g Cebolla picada','Cilantro picado','1 Limón'],
+   procedimiento:['Freír jalapeños y sazonar con ajo en polvo. Agregar los frijoles ya cocidos y reducidos.','Lavar arroz en olla de arrocera y cocer con sazonador vegetal.','Picar pollo en cubos, marinar en chiles chipotles. Freír hasta sellar.','Picar tomate, cebolla, cilantro y echar limón y sal.','Servir cada cosa por separado en un bowl.']
+  },
+  {id:101, cat:'cena', nombre:'Burrito de Arroz y Frijoles', kcal:397, macros:'11P 12F',
+   ingredientes:['60g de tortilla harina integral (3 chicas, 2 med o 1 grande)','½ taza arroz cocido','130g frijoles isadora','½ tomate picado','3 hojas lechuga picada','½ aguacate molido'],
+   procedimiento:['Dejar arroz remojando unas horas. Lavar tirando agua.','Pasar a una olla con 2 veces el agua contra el arroz.','Picar tomate y lechuga ya desinfectada.','Machacar la mitad de un aguacate.','Calentar tortilla/s en sartén, embarrar frijoles y aguacate, encima arroz y las verduras y cerrar burrito.']
+  },
+  {id:102, cat:'cena', nombre:'Calabacitas Rellenas', kcal:546, macros:'20P 27F',
+   ingredientes:['100g garbanzo enlatado','2 calabacitas','1/8 cebolla picada','½ tomate picado','¼ pimiento picado','20g queso fresco','Sal Pimienta Ajo en Polvo','½ aguacate'],
+   procedimiento:['Partir las calabacitas por la mitad y sacar relleno. Se pueden comer crudas o meter 1 minuto al microondas para suavizarlas antes de rellenarlas.','Picar cebolla, tomate y pimiento, sofreír con poco aceite. Sazonar con sal, pimienta y ajo en polvo.','Añadir garbanzos al guiso.','Rellenar los barquitos de calabaza con el guiso y decorar con queso fresco y aguacate.']
+  },
+  {id:103, cat:'cena', nombre:'Carnitas de Portobello', kcal:519, macros:'22P 18F',
+   ingredientes:['6 Tortillas','2 Portobellos','1 cda aceite','½ cebolla','Salsa para tacos','1 cda salsa soya','1 limón','Ajo en polvo','Pimienta limón'],
+   procedimiento:['Limpiar portobellos con una servilleta.','Meter a una bolsa de plástico o topper, marinar con salsa de soya, limón, ajo en polvo y pimienta limón, bañar bien en el marinado y guardar por 30 min o toda la noche.','Rebanar en fajitas y dorar en sartén junto con la cebolla rebanada y el aceite.','Servir en tacos con salsa.']
+  },
+  {id:104, cat:'cena', nombre:'Ceviche de Atún', kcal:463, macros:'34P 10F',
+   ingredientes:['75g atún en sobre','60g Tomate picado','5g Cilantro picado','20g Apio picado','33g Cebolla','25g Morrón','60g Catsup','1 Limón','Pimienta','Sal','3 Tostadas horneadas'],
+   procedimiento:['Picar toda la verdura y añadir al atún.','Añadir catsup, limón, sal y pimienta y mezclar.']
+  },
+  {id:105, cat:'cena', nombre:'Ceviche de Mango', kcal:400, macros:'8P 12F',
+   ingredientes:['1 mango','1 aguacate','3 tostadas','1 tomate','¼ cebolla','2 cdas cilantro picado','¼ pepino picado'],
+   procedimiento:['Picar todo en cubitos finos y mezclar. Se puede añadir chile en polvo.']
+  },
+  {id:106, cat:'cena', nombre:'Chili de Lentejas y Totopos', kcal:655, macros:'24P 28F',
+   ingredientes:['60g lenteja seca','16g morrón picado','15g zanahoria picada','10g apio picado','17g cebolla picada','¼ ajo picado','1 cdita paprika','1 cdita comino','1 cda pimentón rojo','1 cda aceite Pimienta','Sal','100g totopos'],
+   procedimiento:['Medir lentejas, buscar piedras, limpiar, hervir.','Freír zanahoria, morrón, apio y cebolla hasta fragantes. Añadir paprika, comino y pimentón rojo.','Añadir lentejas con caldo y añadir pimienta, sal.','Dejar reducir.']
+  },
+  {id:107, cat:'cena', nombre:'Coctel de Camarones', kcal:401, macros:'33P 9F',
+   ingredientes:['100g camarones','100g puré tomate','50g catsup','1 cda cebolla picada','½ tomate picado','1 cda cilantro picado','2 paquetes (6 saladitas)','½ aguacate rebanado','1 limón'],
+   procedimiento:['Pesar 100g camarones cocidos.','Picar los ingredientes y revolver con catsup y puré de tomate.']
+  },
+  {id:108, cat:'cena', nombre:'Club Sandwich', kcal:456, macros:'24P 6F',
+   ingredientes:['2 reb bimbo integral','½ pechuga (60g)','1 reb jamón','1 cda aceite','1 hoja lechuga','3 reb tomate','1 rebanada cebolla','1 reb queso bajo grasa','15g mayonesa light','½ bolsa papitas'],
+   procedimiento:['Sofreír la pechuga en tiras con pimienta limón y pasar al sándwich con los demás ingredientes.']
+  },
+  {id:109, cat:'cena', nombre:'Curry de Pollo', kcal:416, macros:'17P 4F',
+   ingredientes:['150g pechuga pollo','50ml crema de coco','1 tomate molido','20ml puré de tomate','1/6 cebolla rebanada','2g ajo picado','1g jengibre picado','Polvo curry','Comino','Cilantro molido','Paprika','Sal pimienta','1 taza arroz cocido'],
+   procedimiento:['Cortar la pechuga en cubos medianos. Pasar a freír a fuego medio bajo con poco aceite hasta cocida sin tostar.','Picar cebolla, ajo y jengibre.','Freír los vegetales hasta fragantes, añadir la polla y especias.','Licuar el tomate con puré, añadir al guiso junto con la leche de coco y dejar reducir.','Servir arroz y curry.']
+  },
+  {id:110, cat:'cena', nombre:'Curry de Garbanzos', kcal:580, macros:'15P 12F',
+   ingredientes:['100g garbanzos enlatados','50ml crema de coco','1 tomate molido','20ml puré de tomate','1/6 cebolla rebanada','2g ajo picado','1g jengibre picado','Polvo curry','Comino','Cilantro molido','Paprika','Sal pimienta','1 taza arroz cocido'],
+   procedimiento:['Pesar los garbanzos. Pasar a freír a fuego medio bajo con poco aceite.','Picar cebolla, ajo y jengibre.','Freír los vegetales hasta fragantes, añadir al garbanzo y especias.','Licuar el tomate con puré, añadir al guiso junto con la leche de coco y dejar reducir.','Servir arroz y curry.']
+  },
+  {id:111, cat:'cena', nombre:'Curry Vegetal', kcal:570, macros:'21P 10F',
+   ingredientes:['1 papa picada','1 zanahoria en cubos','¼ cabeza de coliflor','Comino','1 tomate','½ cebolla','¼ serrano paprika','50g chícharos congelados/enlatado','Pimienta negra','Polvo de curry','50g de yogurt griego/almendra','50ml crema de coco'],
+   procedimiento:['Picar la papa, zanahoria y coliflor y hervir hasta traspasables con un tenedor.','Picar cebolla, tomate y serrano en cubos pequeños.','Sofreír con muy poco aceite las especias, y agregar cebolla, tomate y serrano.','Añadir yogurt y crema de coco y dejar reducir hasta una consistencia espesa.','Añadir vegetales hervidos y chícharos y servir.']
+  },
+  {id:112, cat:'cena', nombre:'Enchiladas Verdes', kcal:440, macros:'23P 11F',
+   ingredientes:['5 tortillas','1 muslo de pollo hervido y desmenuzado','200g tomatillo','1/6 Cebolla rebanada','¼ chile serrano','20g queso panela'],
+   procedimiento:['Hervir el muslo y desmenuzar.','Hervir tomatillos con chile, cebolla y ajo. Licuar una vez cambian de color.','Calentar tortillas en comal directamente, doblar por la mitad, rellenar de pollo y bañar con salsa encima.','Decorar con cebolla cruda y queso panela fresco.']
+  },
+  {id:113, cat:'cena', nombre:'Enmoladas', kcal:609, macros:'26P 14F',
+   ingredientes:['5 tortillas','1 muslo de pollo hervido y desmenuzado','100g mole','20g Queso Panela'],
+   procedimiento:['Hervir el muslo y desmenuzar.','Adelgazar mole con caldo de verduras/pollo hirviendo.','Calentar tortillas en comal directamente, doblar por la mitad, rellenar de pollo y bañar con mole.','Decorar con queso panela fresco.']
+  },
+  {id:114, cat:'cena', nombre:'Ensalada de Frijol y Semillas', kcal:666, macros:'37P 22F',
+   ingredientes:['¼ cebolla picada','½ pimiento morrón picado','½ calabacita rallada','½ aguacate','2 cdas semillas girasol','100g frijoles negros enteros isadora','1 limón','Sal','Ajo en polvo'],
+   procedimiento:['Picar cebolla, pimiento y calabacita finamente.','Mezclar con aguacate en cubos, semillas, frijoles, aderezar con limón, sal y ajo en polvo.']
+  },
+  {id:115, cat:'cena', nombre:'Ensalada de Pasta y Garbanzo', kcal:609, macros:'25P 22F',
+   ingredientes:['¼ cebolla en cubos grandes','1 calabacita en cubos grandes','100g de garbanzo enlatado','50g de pasta penne cocida','5 hojas de lechuga o verdes','½ tomate picado en cubos grandes','Sal, Pimienta, Ajo en polvo','½ aguacate en cubos'],
+   procedimiento:['Picar tomate, cebolla y calabacita en cubos grandes. Sofreír con poco aceite hasta dorados.','Cocer pasta.','Poner cama de lechuga o verdes. Añadir los garbanzos, aguacate en cubos y pasta, con los vegetales salteados y mezclar.']
+  },
+  {id:116, cat:'cena', nombre:'Ensalada de Pasta Integral/Proteína', kcal:469, macros:'17P 11F',
+   ingredientes:['40g pasta de proteína/integral','1 rebanada de jamón virginia','16g zanahoria cubitos','32g elote en lata','37g morrón picado','Sal y Pimienta','1 paquetito de Saladitas','20g mayonesa'],
+   procedimiento:['Hervir pasta hasta suave (10 min aprox). Después pasar a un colador y enfriar a chorro de agua.','Picar todos los vegetales y jamón.','Mezclar todo con mayonesa.']
+  },
+  {id:117, cat:'cena', nombre:'Ensalada de Pollo', kcal:436, macros:'25P 8F',
+   ingredientes:['120g pechuga pollo','30ml ranch light','10 rebanadas de pepino','½ zanahoria rallada','2 hojas lechuga','½ tomate','30g elote en lata','30g crutones'],
+   procedimiento:['Sofreír la pechuga en tiras con pimienta limón y pasar a enfriar.','Rallar zanahoria, picar lechuga en pedazos grandes, rebanar pepino en medias lunas, picar tomate y añadir elote en lata y crutones, mezclar todo y poner pollo encima.']
+  },
+  {id:118, cat:'cena', nombre:'Huarache de Nopal', kcal:324, macros:'23P 10F',
+   ingredientes:['2 pencas de nopal','100g pechuga sin hueso en láminas','1/8 cebolla','½ tomate picado','¼ pimiento picado','6 pz de champiñones frescos','Sal y pimienta'],
+   procedimiento:['Tatemar las pencas de nopal en un sartén/comal.','Laminar la pechuga y picar los vegetales.','Sofreír la pechuga con sal y pimienta hasta cocida.','Sofreír los vegetales con poco aceite hasta suaves.','Servir pollo encima de las pencas y los vegetales encima de este.']
+  },
+  {id:119, cat:'cena', nombre:'Hummus Palitos', kcal:232, macros:'6P 8F',
+   ingredientes:['½ paquete de hummus','½ zanahoria en palitos','1 barra de apio en palitos'],
+   procedimiento:['Lavar y picar la zanahoria y apio en tiras. Disfrutar con hummus.']
+  },
+  {id:120, cat:'cena', nombre:'Milanesa Puré Verduras', kcal:357, macros:'17P 5F',
+   ingredientes:['1 pechuga de 120g','30g puré papa','100g verduras california','1 reb margarina','1 cda aceite','Pimienta limón'],
+   procedimiento:['Descongelar verduras california, pasar a un sartén con aceite hasta dorar. Añadir margarina al final, sazonar con pimienta limón.','Instrucciones de puré de papa en el empaque.','Sazonar milanesa con pimienta limón. Dorar en sartén con poco aceite.','Se puede acompañar la milanesa con medio limón y/o catsup.']
+  },
+  {id:121, cat:'cena', nombre:'Sándwich Aguacate', kcal:478, macros:'19P 18F',
+   ingredientes:['2 reb pan integral','½ lata garbanzos machacados','½ aguacate molido','1 hoja lechuga rebanada','½ tomate picado','1 cda cebolla picada'],
+   procedimiento:['Machacar los garbanzos junto con el aguacate, rebanar lechuga, tomate y cebolla y añadirlo a la mezcla de garbanzos y aguacate y meter entre dos rebanadas de pan.']
+  },
+  {id:122, cat:'cena', nombre:'Sopa de Lentejas', kcal:482, macros:'27P 25F',
+   ingredientes:['1.5 tazas lentejas cocidas','1 papa de 200g','1 tomate de 200g','1/8 de cebolla picada','2 cdas cilantro picado'],
+   procedimiento:['Separar lentejas secas de piedras.','Cocer lentejas: por cada taza añadir 4 tazas de agua. Hervir, tapar y poner a fuego bajo por 25 min.','Picar papa en cuadros medianos y añadir a las lentejas al inicio de la cocción. Picar la cebolla y el tomate y añadir a la mitad de la cocción.','Desinfectar cilantro y picarlo, añadirlo al caldo una vez estén suaves las lentejas.']
+  },
+  {id:123, cat:'cena', nombre:'Tacos de Pollo y Verduras', kcal:530, macros:'26P 15F',
+   ingredientes:['120g de pechuga picada a la plancha','6 tortillas','2 hojas de lechuga picada','½ tomate picado','10 rebanadas de cebolla','½ aguacate','Sal'],
+   procedimiento:['Desinfectar lechuga y picarla, rebanar el tomate, aguacate y la cebolla.','Sofreír la pechuga en tiras con pimienta limón.','Servir con sal al gusto sobre los vegetales.']
+  },
+  {id:124, cat:'cena', nombre:'Tacos de Tinga de Zanahoria', kcal:560, macros:'17P 20F',
+   ingredientes:['½ cebolla rallada','50g repollo rallado','1 zanahoria rallada','1 tomate licuado','1 diente de ajo','1 chile morita','4 tortillas','80g frijoles refritos','½ aguacate','20g queso fresco'],
+   procedimiento:['Rallar cebolla, repollo y zanahoria y sofreír con poco aceite.','Licuar tomate, ajo y chile morita.','Añadir salsa a las verduras hasta reducir.','Servir en tortillas calientes del comal embarradas de frijoles y con aguacate y queso encima.']
+  },
+  {id:125, cat:'cena', nombre:'Tostadas de Tinga de Pollo', kcal:589, macros:'25P 15F',
+   ingredientes:['3 tostadas','1 muslo pollo','1 diente de ajo picado','½ cebolla en lunas','2 jitomate','Chipotle','120g frijoles refritos','1 cucharada aceite'],
+   procedimiento:['Hervir el pollo hasta que esté totalmente cocido. Deshébralo y reserva.','En una sartén grande fríe la cebolla con el aceite hasta que esté transparente. Agrega el ajo, fríe por 5 minutos más y añade los jitomates.','Licúa el jitomate restante con la lata de chipotles e incorpora la mezcla al sofrito.','Hierve a fuego bajo durante 20 minutos. Adiciona el pollo y salpimienta.','Calienta los frijoles y unta sobre las tostadas. Coloca la tinga encima. Acompaña con lechuga fileteada.']
+  },
+  {id:126, cat:'cena', nombre:'Tostadas de Tinga de Bisteck', kcal:667, macros:'33P 13F',
+   ingredientes:['3 tostadas','1 milanesa cruda','1 diente de ajo picado','½ cebolla en lunas','2 jitomates','Chipotles en lata','Frijoles refritos','Lechuga fileteada'],
+   procedimiento:['Rebanar milanesa cruda, pasar a sofreír con muy poco aceite.','Agregar la cebolla con el aceite hasta que esté transparente. Agrega el ajo, fríe por 5 minutos más y añade los jitomates.','Licúa el jitomate restante con la lata de chipotles e incorpora la mezcla al sofrito.','Hierve a fuego bajo durante 20 minutos. Adiciona el bisteck y salpimienta.','Calienta los frijoles y unta sobre las tostadas. Coloca la tinga encima. Acompaña con lechuga fileteada.']
+  },
+];
+
+// ================================================================
+// STATE
+// ================================================================
+let currentFilter = 'all';
+let currentRecipeModal = null;
+let weekOffset = 0;
+let weekPlan = {};
+let selectorContext = null;
+let pantryIngredients = [];
+let despensaData = [];
+let selectorCatFilter = 'all';
+let _fbReady = false;
+
+// ================================================================
+// AUTH
+// ================================================================
+async function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value.trim();
+  if (u === 'brikatwo' && p === 'Brika777') {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.body.insertAdjacentHTML('beforeend',
+      '<div id="jb-loading" style="position:fixed;inset:0;background:rgba(254,253,248,0.95);z-index:9998;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;">' +
+      '<div style="font-size:3rem">🌿</div>' +
+      '<div style="font-family:DM Sans,sans-serif;color:#2d6a4f;font-size:1.1rem;font-weight:600">Cargando tus datos…</div>' +
+      '<div style="font-family:DM Sans,sans-serif;color:#5a5a7a;font-size:0.85rem">Conectando con la nube ☁️</div></div>');
+    try {
+      const [wp, pi, dd] = await Promise.all([
+        jbGet('weekPlan'), jbGet('pantryIngs'), jbGet('despensa')
+      ]);
+      if (wp) weekPlan = wp;
+      if (pi) pantryIngredients = pi;
+      if (dd) despensaData = dd;
+    } catch(e) { console.log('Sin datos previos:', e); }
+    _fbReady = true;
+    const loader = document.getElementById('jb-loading');
+    if (loader) loader.remove();
+    renderRecipes(); renderWeek(); renderPantry(); renderDespensa(); updateDespensaStats();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
+});
+function doLogout() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// ================================================================
+// NAVIGATION
+// ================================================================
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.mobile-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const tabs = document.querySelectorAll('.nav-tab');
+  const pages = ['recetario','planeador','quehoy','despensa'];
+  const idx = pages.indexOf(id);
+  if (tabs[idx]) tabs[idx].classList.add('active');
+  const mtabs = document.querySelectorAll('.mobile-tab');
+  if (mtabs[idx]) mtabs[idx].classList.add('active');
+  if (id === 'quehoy') renderPantry();
+}
+
+// ================================================================
+// RECETARIO
+// ================================================================
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterRecipes();
+}
+function filterRecipes() {
+  const q = document.getElementById('recipe-search').value.toLowerCase();
+  const cats = ['prep','desayuno','comida','cena'];
+  const catLabels = { prep:'Preparaciones', desayuno:'Desayunos', comida:'Comidas', cena:'Cenas' };
+  const container = document.getElementById('recipes-container');
+  container.innerHTML = '';
+  cats.forEach(cat => {
+    if (currentFilter !== 'all' && currentFilter !== cat) return;
+    const recipes = RECETAS.filter(r => r.cat === cat && (!q || r.nombre.toLowerCase().includes(q)));
+    if (!recipes.length) return;
+    const section = document.createElement('div');
+    section.className = 'cat-section';
+    const badge = `<span class="cat-badge badge-${cat}">${catLabels[cat]}</span>`;
+    section.innerHTML = `<div class="cat-title">${badge} ${catLabels[cat]}</div><div class="recipes-grid"></div>`;
+    const grid = section.querySelector('.recipes-grid');
+    recipes.forEach(r => {
+      const card = document.createElement('div');
+      card.className = `recipe-card ${cat}`;
+      const calText = r.kcal ? `<span class="cal-pill">${r.kcal} kcal</span> <span>${r.macros}</span>` : '<span style="color:var(--text-muted);font-size:0.8rem;">Preparación base</span>';
+      card.innerHTML = `<div class="recipe-name">${r.nombre}</div><div class="recipe-cal">${calText}</div>`;
+      card.onclick = () => openRecipeModal(r.id);
+      grid.appendChild(card);
+    });
+    container.appendChild(section);
+  });
+}
+
+function openRecipeModal(id) {
+  const r = RECETAS.find(x => x.id === id);
+  if (!r) return;
+  currentRecipeModal = r;
+  document.getElementById('modal-name').textContent = r.nombre;
+  const mp = document.getElementById('modal-macros');
+  if (r.kcal) {
+    mp.innerHTML = `<span class="macro-pill macro-kcal">🔥 ${r.kcal} kcal</span><span class="macro-pill macro-p">💪 ${r.macros.split(' ')[0]} Proteína</span><span class="macro-pill macro-f">🫙 ${r.macros.split(' ')[1]} Grasa</span>`;
+  } else {
+    mp.innerHTML = '<span class="macro-pill macro-kcal">Preparación base del recetario</span>';
+  }
+  document.getElementById('modal-ingredients').innerHTML = r.ingredientes.map(i => `<li>${i}</li>`).join('');
+  document.getElementById('modal-procedure').innerHTML = r.procedimiento.map((p,i) => `<li><span class="proc-num">${i+1}</span><span>${p}</span></li>`).join('');
+  document.getElementById('recipe-modal-overlay').classList.add('open');
+}
+function closeModal(e) { if (e.target === document.getElementById('recipe-modal-overlay')) closeRecipeModal(); }
+function closeRecipeModal() { document.getElementById('recipe-modal-overlay').classList.remove('open'); }
+
+// ================================================================
+// PLANEADOR SEMANAL
+// ================================================================
+const DAYS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const MEALS_LABELS = ['☀️ Desayuno','☕ Colación','🍽️ Comida','🌙 Cena'];
+const MEAL_KEYS = ['desayuno','colacion','comida','cena'];
+
+function getWeekKey(offset) {
+  const d = new Date();
+  d.setDate(d.getDate() - d.getDay() + 1 + offset * 7);
+  return d.toISOString().slice(0,10);
+}
+function getWeekDates(offset) {
+  const dates = [];
+  const d = new Date();
+  d.setDate(d.getDate() - d.getDay() + 1 + offset * 7);
+  for (let i = 0; i < 7; i++) {
+    dates.push(new Date(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return dates;
+}
+function changeWeek(dir) { weekOffset += dir; renderWeek(); }
+function clearWeek() {
+  const wk = getWeekKey(weekOffset);
+  delete weekPlan[wk];
+  if(_fbReady) jbSet('weekPlan', weekPlan);
+  renderWeek();
+}
+function renderWeek() {
+  const wk = getWeekKey(weekOffset);
+  const dates = getWeekDates(weekOffset);
+  const today = new Date().toISOString().slice(0,10);
+  if (!weekPlan[wk]) weekPlan[wk] = {};
+  const plan = weekPlan[wk];
+  // label
+  const d0 = dates[0], d6 = dates[6];
+  document.getElementById('week-label').textContent =
+    `${d0.getDate()}/${d0.getMonth()+1} — ${d6.getDate()}/${d6.getMonth()+1}/${d6.getFullYear()}`;
+  // grid
+  const grid = document.getElementById('week-grid');
+  grid.innerHTML = '';
+  dates.forEach((date, di) => {
+    const dateStr = date.toISOString().slice(0,10);
+    const isToday = dateStr === today;
+    const dayKey = dateStr;
+    if (!plan[dayKey]) plan[dayKey] = {};
+    const col = document.createElement('div');
+    col.className = 'day-col';
+    col.innerHTML = `<div class="day-header${isToday?' today':''}">
+      <div>${DAYS[di]}</div>
+      <div style="font-size:0.72rem;opacity:0.8;font-weight:400;">${date.getDate()}/${date.getMonth()+1}</div>
+    </div><div class="day-meals"></div>`;
+    const mealsDiv = col.querySelector('.day-meals');
+    MEAL_KEYS.forEach((mk, mi) => {
+      const slot = document.createElement('div');
+      const assigned = plan[dayKey][mk];
+      slot.className = 'meal-slot' + (assigned ? ' filled' : '');
+      slot.innerHTML = `<div class="meal-slot-label">${MEALS_LABELS[mi]}</div>`;
+      if (assigned) {
+        const r = RECETAS.find(x => x.id === assigned);
+        slot.innerHTML += `<div class="meal-slot-name">${r ? r.nombre : '?'}</div>
+          <button class="meal-remove" onclick="removeFromPlan('${wk}','${dayKey}','${mk}',event)">✕</button>`;
+      }
+      slot.onclick = (e) => { if (!e.target.classList.contains('meal-remove')) openSelector(wk, dayKey, mk); };
+      mealsDiv.appendChild(slot);
+    });
+    grid.appendChild(col);
+  });
+  renderWeekSummary(plan);
+}
+function removeFromPlan(wk, dayKey, mk, e) {
+  e.stopPropagation();
+  if (weekPlan[wk] && weekPlan[wk][dayKey]) {
+    delete weekPlan[wk][dayKey][mk];
+    if(_fbReady) jbSet('weekPlan', weekPlan);
+    renderWeek();
+  }
+}
+function renderWeekSummary(plan) {
+  const list = document.getElementById('week-summary-list');
+  let total = 0, count = 0;
+  const cats = { desayuno:0, comida:0, cena:0 };
+  Object.values(plan).forEach(day => {
+    Object.entries(day).forEach(([mk, rid]) => {
+      if (!rid) return;
+      const r = RECETAS.find(x => x.id === rid);
+      if (r && r.kcal) { total += r.kcal; count++; }
+      if (cats[mk] !== undefined) cats[mk]++;
+    });
+  });
+  const avg = count > 0 ? Math.round(total / (count / 3)) : 0;
+  list.innerHTML = `
+    <div class="summary-item">☀️ Desayunos planificados: <strong>${cats.desayuno}</strong></div>
+    <div class="summary-item">🍽️ Comidas planificadas: <strong>${cats.comida}</strong></div>
+    <div class="summary-item">🌙 Cenas planificadas: <strong>${cats.cena}</strong></div>
+    <div class="summary-item">🔥 Promedio kcal diarias estimadas: <strong>${avg || '—'} kcal</strong></div>
+  `;
+}
+
+// Selector
+function openSelector(wk, dayKey, mk) {
+  selectorContext = { wk, dayKey, mk };
+  selectorCatFilter = 'all';
+  renderSelectorCats();
+  filterSelector('');
+  document.getElementById('selector-context').textContent = `Asignar a: ${DAYS[new Date(dayKey+'T12:00:00').getDay() === 0 ? 6 : new Date(dayKey+'T12:00:00').getDay()-1]} — ${MEALS_LABELS[MEAL_KEYS.indexOf(mk)]}`;
+  document.getElementById('selector-modal-overlay').classList.add('open');
+}
+function renderSelectorCats() {
+  const cats = [{k:'all',l:'Todas'},{k:'prep',l:'Prep'},{k:'desayuno',l:'Desayunos'},{k:'comida',l:'Comidas'},{k:'cena',l:'Cenas'}];
+  document.getElementById('selector-cats').innerHTML = cats.map(c =>
+    `<button class="filter-btn${selectorCatFilter===c.k?' active':''}" onclick="setSelectorCat('${c.k}',this)">${c.l}</button>`
+  ).join('');
+}
+function setSelectorCat(k, btn) {
+  selectorCatFilter = k;
+  renderSelectorCats();
+  filterSelector(document.querySelector('.selector-search').value);
+}
+function filterSelector(q) {
+  const grid = document.getElementById('selector-grid');
+  grid.innerHTML = '';
+  RECETAS.filter(r =>
+    (selectorCatFilter === 'all' || r.cat === selectorCatFilter) &&
+    (!q || r.nombre.toLowerCase().includes(q.toLowerCase()))
+  ).forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'selector-card';
+    card.innerHTML = `<div class="s-name">${r.nombre}</div><div class="s-kcal">${r.kcal ? r.kcal+' kcal · '+r.macros : 'Preparación base'}</div>`;
+    card.onclick = () => assignRecipe(r.id);
+    grid.appendChild(card);
+  });
+}
+function assignRecipe(rid) {
+  if (!selectorContext) return;
+  const { wk, dayKey, mk } = selectorContext;
+  if (!weekPlan[wk]) weekPlan[wk] = {};
+  if (!weekPlan[wk][dayKey]) weekPlan[wk][dayKey] = {};
+  weekPlan[wk][dayKey][mk] = rid;
+  if(_fbReady) jbSet('weekPlan', weekPlan);
+  closeSelectorModal();
+  renderWeek();
+}
+function closeSelectorModal(e) {
+  if (e && e.target !== document.getElementById('selector-modal-overlay')) return;
+  document.getElementById('selector-modal-overlay').classList.remove('open');
+}
+// Agregar al planeador desde modal de receta
+document.getElementById('modal-add-plan-btn').onclick = function() {
+  closeRecipeModal();
+  showPage('planeador');
+  if (currentRecipeModal) {
+    const r = currentRecipeModal;
+    const today = new Date().toISOString().slice(0,10);
+    const wk = getWeekKey(weekOffset);
+    if (!weekPlan[wk]) weekPlan[wk] = {};
+    if (!weekPlan[wk][today]) weekPlan[wk][today] = {};
+    const used = MEAL_KEYS.filter(mk => weekPlan[wk][today][mk]);
+    const next = MEAL_KEYS.find(mk => !weekPlan[wk][today][mk]) || 'cena';
+    weekPlan[wk][today][next] = r.id;
+    if(_fbReady) jbSet('weekPlan', weekPlan);
+    renderWeek();
+  }
+};
+
+// ================================================================
+// QUE HAGO HOY (INGREDIENTES)
+// ================================================================
+const QUICK_INGS = ['pollo','frijoles','arroz','huevos','lentejas','garbanzo','aguacate','tomate','cebolla','champiñones','atún','tortillas','avena','papa','totopos'];
+
+function renderPantry() {
+  const chips = document.getElementById('pantry-chips');
+  chips.innerHTML = pantryIngredients.map((ing,i) =>
+    `<div class="pantry-chip">${ing}<button onclick="removePantryIng(${i})">×</button></div>`
+  ).join('');
+  const qi = document.getElementById('quick-ings');
+  qi.innerHTML = QUICK_INGS.filter(q => !pantryIngredients.includes(q)).map(q =>
+    `<button class="pantry-tag" onclick="quickAddIng('${q}')">+ ${q}</button>`
+  ).join('');
+  matchRecipes();
+}
+function addPantryIng() {
+  const input = document.getElementById('pantry-ing-input');
+  const val = input.value.trim().toLowerCase();
+  if (!val) return;
+  val.split(',').forEach(v => {
+    const t = v.trim();
+    if (t && !pantryIngredients.includes(t)) pantryIngredients.push(t);
+  });
+  input.value = '';
+  if(_fbReady) jbSet('pantryIngs', pantryIngredients);
+  renderPantry();
+}
+function removePantryIng(i) {
+  pantryIngredients.splice(i, 1);
+  if(_fbReady) jbSet('pantryIngs', pantryIngredients);
+  renderPantry();
+}
+function quickAddIng(ing) {
+  if (!pantryIngredients.includes(ing)) { pantryIngredients.push(ing); }
+  if(_fbReady) jbSet('pantryIngs', pantryIngredients);
+  renderPantry();
+}
+function matchRecipes() {
+  const title = document.getElementById('match-title');
+  const grid = document.getElementById('match-results');
+  if (!pantryIngredients.length) {
+    title.textContent = 'Agrega ingredientes para ver resultados';
+    grid.innerHTML = '';
+    return;
+  }
+  const pIngs = pantryIngredients.map(i => i.toLowerCase());
+  const results = [];
+  RECETAS.forEach(r => {
+    const rIngs = r.ingredientes.map(i => i.toLowerCase());
+    let matched = 0, missing = [];
+    rIngs.forEach(ri => {
+      const found = pIngs.some(pi => ri.includes(pi) || pi.includes(ri.split(' ')[0]));
+      if (found) matched++;
+      else missing.push(ri.split('(')[0].trim());
+    });
+    const pct = Math.round(matched / rIngs.length * 100);
+    if (pct >= 30) results.push({ r, pct, missing: missing.slice(0,4) });
+  });
+  results.sort((a,b) => b.pct - a.pct);
+  title.textContent = results.length ? `${results.length} recetas con tus ingredientes` : 'No encontré recetas con esos ingredientes';
+  grid.innerHTML = '';
+  results.slice(0,24).forEach(({ r, pct, missing }) => {
+    const isFull = pct >= 80;
+    const card = document.createElement('div');
+    card.className = `match-card ${isFull ? 'full' : 'partial'}`;
+    card.innerHTML = `
+      <div class="match-card-name">${r.nombre}</div>
+      <span class="match-badge ${isFull ? 'match-full' : 'match-partial'}">${isFull ? '✅ Tienes todo' : `${pct}% disponible`}</span>
+      ${r.kcal ? `<div class="recipe-cal" style="margin-top:6px;"><span class="cal-pill">${r.kcal} kcal</span></div>` : ''}
+      ${!isFull && missing.length ? `<div class="missing-ings">Faltan: <span>${missing.join(', ')}</span></div>` : ''}
+    `;
+    card.onclick = () => openRecipeModal(r.id);
+    grid.appendChild(card);
+  });
+}
+
+// ================================================================
+// DESPENSA
+// ================================================================
+const ZONAS = ['Verduras y Frutas','Carnicería','Salchichonería','Congelados','Lácteos','Abarrotes','Panadería','Pasillo','Otros'];
+const UNIDADES = ['pzas','g','kg','ml','L','bolsa','lata','caja','sobre','racimo','manojo'];
+const SUPERS = ['Walmart','HEB','Soriana','Chedraui','La Comer','Bodega Aurrera','Costco','Otro'];
+
+function zonaBadgeClass(z) {
+  if (!z) return 'zona-otros';
+  const m = { 'Verduras y Frutas':'verduras','Carnicería':'carniceria','Salchichonería':'salchichoneria','Congelados':'congelados','Lácteos':'lacteos','Abarrotes':'abarrotes','Panadería':'panaderia','Pasillo':'pasillo' };
+  return 'zona-' + (m[z] || 'otros');
+}
+
+function addDespensaRow() {
+  despensaData.push({ id: Date.now(), producto:'', zona:'', pasillo:'', cantidad:'', unidad:'pzas', super:'', precio:'', comprado:false });
+  saveDespensa();
+  renderDespensa();
+  updateDespensaStats();
+}
+
+function renderDespensa() {
+  const filterZona = document.getElementById('filter-zona').value;
+  const filterSuper = document.getElementById('filter-super').value;
+  const tbody = document.getElementById('despensa-tbody');
+  tbody.innerHTML = '';
+  const filtered = despensaData.filter(row =>
+    (!filterZona || row.zona === filterZona) &&
+    (!filterSuper || row.super === filterSuper)
+  );
+  filtered.forEach((row) => {
+    const tr = document.createElement('tr');
+    if (row.comprado) tr.style.opacity = '0.5';
+    tr.innerHTML = `
+      <td><input type="checkbox" ${row.comprado?'checked':''} onchange="toggleComprado(${row.id},this.checked)" style="width:auto;accent-color:var(--verde);cursor:pointer;width:18px;height:18px;"></td>
+      <td><input type="text" value="${escHtml(row.producto)}" placeholder="Producto..." onchange="updateDespensa(${row.id},'producto',this.value)"></td>
+      <td>
+        <select onchange="updateDespensa(${row.id},'zona',this.value)">
+          <option value="">— Zona —</option>
+          ${ZONAS.map(z=>`<option ${row.zona===z?'selected':''}>${z}</option>`).join('')}
+        </select>
+      </td>
+      <td><input type="text" value="${escHtml(row.pasillo)}" placeholder="Pasillo / Sección" onchange="updateDespensa(${row.id},'pasillo',this.value)"></td>
+      <td><input type="text" value="${escHtml(row.cantidad)}" placeholder="Cant." onchange="updateDespensa(${row.id},'cantidad',this.value)" style="max-width:70px;"></td>
+      <td>
+        <select onchange="updateDespensa(${row.id},'unidad',this.value)">
+          ${UNIDADES.map(u=>`<option ${row.unidad===u?'selected':''}>${u}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <select onchange="updateDespensa(${row.id},'super',this.value)">
+          <option value="">— Super —</option>
+          ${SUPERS.map(s=>`<option ${row.super===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td><input type="text" value="${escHtml(row.precio)}" placeholder="$0.00" onchange="updateDespensa(${row.id},'precio',this.value)" style="max-width:80px;"></td>
+      <td><button class="delete-row-btn" onclick="deleteDespensaRow(${row.id})">×</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  updateTotal();
+}
+
+function escHtml(v) { return (v||'').toString().replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+function updateDespensa(id, field, value) {
+  const row = despensaData.find(r => r.id === id);
+  if (row) { row[field] = value; saveDespensa(); }
+  if (field === 'precio') updateTotal();
+}
+function toggleComprado(id, val) {
+  const row = despensaData.find(r => r.id === id);
+  if (row) { row.comprado = val; saveDespensa(); renderDespensa(); updateDespensaStats(); }
+}
+function deleteDespensaRow(id) {
+  despensaData = despensaData.filter(r => r.id !== id);
+  saveDespensa();
+  renderDespensa();
+  updateDespensaStats();
+}
+function saveDespensa() { if(_fbReady) jbSet('despensa', despensaData); }
+
+function updateTotal() {
+  let total = 0;
+  despensaData.forEach(r => {
+    const p = parseFloat((r.precio||'').toString().replace('$',''));
+    if (!isNaN(p)) total += p;
+  });
+  document.getElementById('total-price').textContent = '$' + total.toFixed(2);
+}
+
+function updateDespensaStats() {
+  const stats = document.getElementById('despensa-stats');
+  const total = despensaData.length;
+  const pendientes = despensaData.filter(r => !r.comprado).length;
+  let totalPrecio = 0;
+  despensaData.forEach(r => {
+    const p = parseFloat((r.precio||'').toString().replace('$',''));
+    if (!isNaN(p)) totalPrecio += p;
+  });
+  const zonas = new Set(despensaData.map(r => r.zona).filter(z => z)).size;
+  stats.innerHTML = `
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Productos totales</div></div>
+    <div class="stat-card"><div class="stat-num">${pendientes}</div><div class="stat-label">Por comprar</div></div>
+    <div class="stat-card"><div class="stat-num">${total-pendientes}</div><div class="stat-label">Comprados</div></div>
+    <div class="stat-card"><div class="stat-num">${zonas}</div><div class="stat-label">Zonas distintas</div></div>
+    <div class="stat-card"><div class="stat-num">$${totalPrecio.toFixed(0)}</div><div class="stat-label">Total estimado</div></div>
+  `;
+}
+
+function clearComprados() {
+  despensaData = despensaData.filter(r => !r.comprado);
+  saveDespensa();
+  renderDespensa();
+  updateDespensaStats();
+}
+
+function exportDespensa() {
+  const lines = ['📋 LISTA DE DESPENSA\n'];
+  const byZona = {};
+  despensaData.filter(r => !r.comprado).forEach(r => {
+    const z = r.zona || 'Sin zona';
+    if (!byZona[z]) byZona[z] = [];
+    byZona[z].push(r);
+  });
+  Object.entries(byZona).forEach(([z, items]) => {
+    lines.push(`\n🏪 ${z.toUpperCase()}`);
+    items.forEach(r => {
+      let line = `• ${r.producto}`;
+      if (r.cantidad) line += ` — ${r.cantidad} ${r.unidad}`;
+      if (r.super) line += ` (${r.super})`;
+      if (r.precio) line += ` $${r.precio}`;
+      lines.push(line);
+    });
+  });
+  navigator.clipboard.writeText(lines.join('\n')).then(() => alert('✅ Lista copiada al portapapeles'));
+}
+
+// Init
+renderRecipes();
+</script>
+</body>
+</html>
