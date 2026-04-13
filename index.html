@@ -396,6 +396,92 @@
   }
   @media(min-width:601px) { .mobile-tabs { display:none; } }
 </style>
+<!-- ═══════════════════════════════════════════════════════
+     JSONBin.io — sincronización en la nube entre dispositivos
+     SETUP (solo una vez):
+     1. Ve a https://jsonbin.io y crea cuenta gratuita
+     2. En el dashboard → API Keys → copia tu "Secret Key"
+     3. Pega tu clave donde dice TU_SECRET_KEY abajo
+     4. La primera vez que entres, los bins se crean automáticamente
+═══════════════════════════════════════════════════════ -->
+<script>
+// ── PEGA TU CLAVE AQUÍ ──────────────────────────────────────────
+const JB_KEY = 'TU_SECRET_KEY';   // ← reemplaza con tu clave de jsonbin.io
+// ────────────────────────────────────────────────────────────────
+
+const JB_BASE = 'https://api.jsonbin.io/v3';
+let _bins = {};       // { weekPlan: 'binId', pantryIngs: 'binId', despensa: 'binId' }
+let _fbReady = false;
+let _saveTimers = {}; // debounce por documento
+
+// Guarda los IDs de los bins en el propio HTML usando localStorage SOLO para los IDs (no datos)
+function loadBinIds() {
+  try { _bins = JSON.parse(localStorage.getItem('jb_bin_ids') || '{}'); } catch(e) { _bins = {}; }
+}
+function saveBinIds() {
+  try { localStorage.setItem('jb_bin_ids', JSON.stringify(_bins)); } catch(e) {}
+}
+
+async function jbGet(docName) {
+  if (!JB_KEY || JB_KEY === 'TU_SECRET_KEY') return null;
+  const binId = _bins[docName];
+  if (!binId) return null;
+  try {
+    const res = await fetch(`${JB_BASE}/b/${binId}/latest`, {
+      headers: { 'X-Master-Key': JB_KEY }
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.record?.value ?? null;
+  } catch(e) { console.warn('jbGet error:', e.message); return null; }
+}
+
+async function jbCreate(docName, value) {
+  if (!JB_KEY || JB_KEY === 'TU_SECRET_KEY') return;
+  try {
+    const res = await fetch(`${JB_BASE}/b`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': JB_KEY, 'X-Bin-Name': 'recetario_' + docName, 'X-Bin-Private': 'true' },
+      body: JSON.stringify({ value })
+    });
+    const data = await res.json();
+    if (data.metadata?.id) { _bins[docName] = data.metadata.id; saveBinIds(); }
+  } catch(e) { console.warn('jbCreate error:', e.message); }
+}
+
+async function jbSet(docName, value) {
+  if (!JB_KEY || JB_KEY === 'TU_SECRET_KEY') return;
+  // Debounce: espera 800ms antes de guardar para no saturar la API
+  clearTimeout(_saveTimers[docName]);
+  _saveTimers[docName] = setTimeout(async () => {
+    showSync('saving');
+    try {
+      if (!_bins[docName]) {
+        await jbCreate(docName, value);
+        showSync('saved');
+        return;
+      }
+      const res = await fetch(`${JB_BASE}/b/${_bins[docName]}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Master-Key': JB_KEY },
+        body: JSON.stringify({ value })
+      });
+      if (res.ok) showSync('saved');
+      else { showSync('error'); console.warn('jbSet response:', res.status); }
+    } catch(e) { showSync('error'); console.error('jbSet error:', e.message); }
+  }, 800);
+}
+
+function showSync(state) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  const map = { saving: ['⏳ Guardando…','#b7791f'], saved: ['☁️ Guardado','#2d6a4f'], error: ['⚠️ Sin conexión','#c53030'] };
+  const [txt, color] = map[state] || ['',''];
+  el.textContent = txt; el.style.color = color; el.style.display = 'inline';
+  if (state === 'saved') setTimeout(() => { el.style.display = 'none'; }, 2500);
+}
+</script>
+
 </head>
 <body>
 
@@ -416,6 +502,9 @@
     <button class="login-btn" onclick="doLogin()">Entrar →</button>
     <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
   </div>
+  <div style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.4);backdrop-filter:blur(10px);border:1px solid rgba(116,198,157,0.25);border-radius:12px;padding:12px 22px;font-family:DM Sans,sans-serif;font-size:0.78rem;color:#a8d8be;max-width:400px;width:90vw;text-align:center;line-height:1.6;">
+    ⚙️ Para sincronizar entre dispositivos, crea cuenta en <a href="https://jsonbin.io" target="_blank" style="color:#e9c46a;text-decoration:underline;">jsonbin.io</a> y pega tu clave en el HTML
+  </div>
 </div>
 
 <!-- APP -->
@@ -429,7 +518,8 @@
       <button class="nav-tab" onclick="showPage('despensa')">🛒 Despensa</button>
     </div>
     <div class="nav-user">
-      <span>brikatwo</span>
+      <span id="sync-status" style="font-size:0.73rem;display:none;padding:2px 9px;border-radius:6px;background:rgba(45,106,79,0.09);font-weight:500;"></span>
+      <span style="font-size:0.85rem;color:var(--text-muted)">👤 brikatwo</span>
       <button class="logout-btn" onclick="doLogout()">Salir</button>
     </div>
   </nav>
@@ -1058,26 +1148,45 @@ const RECETAS = [
 let currentFilter = 'all';
 let currentRecipeModal = null;
 let weekOffset = 0;
-let weekPlan = JSON.parse(localStorage.getItem('weekPlan') || '{}');
+let weekPlan = {};
 let selectorContext = null;
-let pantryIngredients = JSON.parse(localStorage.getItem('pantryIngs') || '[]');
-let despensaData = JSON.parse(localStorage.getItem('despensa') || '[]');
+let pantryIngredients = [];
+let despensaData = [];
 let selectorCatFilter = 'all';
 
 // ================================================================
 // AUTH
 // ================================================================
-function doLogin() {
+async function doLogin() {
   const u = document.getElementById('login-user').value.trim();
   const p = document.getElementById('login-pass').value.trim();
   if (u === 'brikatwo' && p === 'Brika777') {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
-    renderRecipes();
-    renderWeek();
-    renderPantry();
-    renderDespensa();
-    updateDespensaStats();
+    // Loader
+    document.body.insertAdjacentHTML('beforeend',
+      '<div id="jb-loading" style="position:fixed;inset:0;background:rgba(254,253,248,0.94);z-index:9998;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;">' +
+      '<div style="font-size:3rem">🌿</div>' +
+      '<div style="font-family:DM Sans,sans-serif;color:#2d6a4f;font-size:1.1rem;font-weight:600">Cargando tus datos…</div>' +
+      '<div style="font-family:DM Sans,sans-serif;color:#5a5a7a;font-size:0.85rem">Conectando con la nube ☁️</div></div>');
+    // Cargar IDs de bins guardados
+    loadBinIds();
+    // Cargar datos desde JSONBin
+    if (JB_KEY && JB_KEY !== 'TU_SECRET_KEY') {
+      try {
+        const [wp, pi, dd] = await Promise.all([
+          jbGet('weekPlan'), jbGet('pantryIngs'), jbGet('despensa')
+        ]);
+        if (wp) weekPlan = wp;
+        if (pi) pantryIngredients = pi;
+        if (dd) despensaData = dd;
+      } catch(e) { console.log('Iniciando con datos vacíos'); }
+    }
+    _fbReady = true;
+    // Quitar loader
+    const loader = document.getElementById('jb-loading');
+    if (loader) loader.remove();
+    renderRecipes(); renderWeek(); renderPantry(); renderDespensa(); updateDespensaStats();
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
@@ -1187,7 +1296,7 @@ function changeWeek(dir) { weekOffset += dir; renderWeek(); }
 function clearWeek() {
   const wk = getWeekKey(weekOffset);
   delete weekPlan[wk];
-  localStorage.setItem('weekPlan', JSON.stringify(weekPlan));
+  if(_fbReady) jbSet('weekPlan', weekPlan);
   renderWeek();
 }
 function renderWeek() {
@@ -1236,7 +1345,7 @@ function removeFromPlan(wk, dayKey, mk, e) {
   e.stopPropagation();
   if (weekPlan[wk] && weekPlan[wk][dayKey]) {
     delete weekPlan[wk][dayKey][mk];
-    localStorage.setItem('weekPlan', JSON.stringify(weekPlan));
+    if(_fbReady) jbSet('weekPlan', weekPlan);
     renderWeek();
   }
 }
@@ -1301,7 +1410,7 @@ function assignRecipe(rid) {
   if (!weekPlan[wk]) weekPlan[wk] = {};
   if (!weekPlan[wk][dayKey]) weekPlan[wk][dayKey] = {};
   weekPlan[wk][dayKey][mk] = rid;
-  localStorage.setItem('weekPlan', JSON.stringify(weekPlan));
+  if(_fbReady) jbSet('weekPlan', weekPlan);
   closeSelectorModal();
   renderWeek();
 }
@@ -1322,7 +1431,7 @@ document.getElementById('modal-add-plan-btn').onclick = function() {
     const used = MEAL_KEYS.filter(mk => weekPlan[wk][today][mk]);
     const next = MEAL_KEYS.find(mk => !weekPlan[wk][today][mk]) || 'cena';
     weekPlan[wk][today][next] = r.id;
-    localStorage.setItem('weekPlan', JSON.stringify(weekPlan));
+    if(_fbReady) jbSet('weekPlan', weekPlan);
     renderWeek();
   }
 };
@@ -1352,17 +1461,17 @@ function addPantryIng() {
     if (t && !pantryIngredients.includes(t)) pantryIngredients.push(t);
   });
   input.value = '';
-  localStorage.setItem('pantryIngs', JSON.stringify(pantryIngredients));
+  if(_fbReady) jbSet('pantryIngs', pantryIngredients);
   renderPantry();
 }
 function removePantryIng(i) {
   pantryIngredients.splice(i, 1);
-  localStorage.setItem('pantryIngs', JSON.stringify(pantryIngredients));
+  if(_fbReady) jbSet('pantryIngs', pantryIngredients);
   renderPantry();
 }
 function quickAddIng(ing) {
   if (!pantryIngredients.includes(ing)) { pantryIngredients.push(ing); }
-  localStorage.setItem('pantryIngs', JSON.stringify(pantryIngredients));
+  if(_fbReady) jbSet('pantryIngs', pantryIngredients);
   renderPantry();
 }
 function matchRecipes() {
@@ -1483,7 +1592,7 @@ function deleteDespensaRow(id) {
   renderDespensa();
   updateDespensaStats();
 }
-function saveDespensa() { localStorage.setItem('despensa', JSON.stringify(despensaData)); }
+function saveDespensa() { if(_fbReady) jbSet('despensa', despensaData); }
 
 function updateTotal() {
   let total = 0;
