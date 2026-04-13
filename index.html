@@ -396,78 +396,47 @@
   }
   @media(min-width:601px) { .mobile-tabs { display:none; } }
 </style>
-<!-- ═══════════════════════════════════════════════════════
-     JSONBin.io — sincronización en la nube entre dispositivos
-     SETUP (solo una vez):
-     1. Ve a https://jsonbin.io y crea cuenta gratuita
-     2. En el dashboard → API Keys → copia tu "Secret Key"
-     3. Pega tu clave donde dice TU_SECRET_KEY abajo
-     4. La primera vez que entres, los bins se crean automáticamente
-═══════════════════════════════════════════════════════ -->
+<!-- JSONBin.io — sincronización en la nube con bins fijos -->
 <script>
-// ── PEGA TU CLAVE AQUÍ ──────────────────────────────────────────
-const JB_KEY = '$2a$10$ezcdi9Oye00pZnlXOoiNp.6QxoIAZVX19AgLwNgwTYy/pBdgbMqT.';   // ← reemplaza con tu clave de jsonbin.io
-// ────────────────────────────────────────────────────────────────
+// ── PEGA TU SECRET KEY DE JSONBIN.IO ────────────────────────────
+const JB_KEY = 'TU_SECRET_KEY';   // ← reemplaza con tu clave
+
+// ── IDs FIJOS — no cambiar ───────────────────────────────────────
+const JB_BINS = {
+  weekPlan:   '69dd48c936566621a8acd5cb',
+  pantryIngs: '69dd48e436566621a8acd63c',
+  despensa:   '69dd48f9856a6821892dba7e'
+};
 
 const JB_BASE = 'https://api.jsonbin.io/v3';
-let _bins = {};       // { weekPlan: 'binId', pantryIngs: 'binId', despensa: 'binId' }
 let _fbReady = false;
-let _saveTimers = {}; // debounce por documento
-
-// Guarda los IDs de los bins en el propio HTML usando localStorage SOLO para los IDs (no datos)
-function loadBinIds() {
-  try { _bins = JSON.parse(localStorage.getItem('jb_bin_ids') || '{}'); } catch(e) { _bins = {}; }
-}
-function saveBinIds() {
-  try { localStorage.setItem('jb_bin_ids', JSON.stringify(_bins)); } catch(e) {}
-}
+let _saveTimers = {};
 
 async function jbGet(docName) {
   if (!JB_KEY || JB_KEY === 'TU_SECRET_KEY') return null;
-  const binId = _bins[docName];
-  if (!binId) return null;
   try {
-    const res = await fetch(`${JB_BASE}/b/${binId}/latest`, {
+    const res = await fetch(JB_BASE + '/b/' + JB_BINS[docName] + '/latest', {
       headers: { 'X-Master-Key': JB_KEY }
     });
-    if (!res.ok) return null;
+    if (!res.ok) { console.warn('jbGet status:', res.status); return null; }
     const data = await res.json();
-    return data.record?.value ?? null;
+    return (data.record && data.record.value !== undefined) ? data.record.value : null;
   } catch(e) { console.warn('jbGet error:', e.message); return null; }
-}
-
-async function jbCreate(docName, value) {
-  if (!JB_KEY || JB_KEY === 'TU_SECRET_KEY') return;
-  try {
-    const res = await fetch(`${JB_BASE}/b`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': JB_KEY, 'X-Bin-Name': 'recetario_' + docName, 'X-Bin-Private': 'true' },
-      body: JSON.stringify({ value })
-    });
-    const data = await res.json();
-    if (data.metadata?.id) { _bins[docName] = data.metadata.id; saveBinIds(); }
-  } catch(e) { console.warn('jbCreate error:', e.message); }
 }
 
 async function jbSet(docName, value) {
   if (!JB_KEY || JB_KEY === 'TU_SECRET_KEY') return;
-  // Debounce: espera 800ms antes de guardar para no saturar la API
   clearTimeout(_saveTimers[docName]);
-  _saveTimers[docName] = setTimeout(async () => {
+  _saveTimers[docName] = setTimeout(async function() {
     showSync('saving');
     try {
-      if (!_bins[docName]) {
-        await jbCreate(docName, value);
-        showSync('saved');
-        return;
-      }
-      const res = await fetch(`${JB_BASE}/b/${_bins[docName]}`, {
+      const res = await fetch(JB_BASE + '/b/' + JB_BINS[docName], {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'X-Master-Key': JB_KEY },
-        body: JSON.stringify({ value })
+        body: JSON.stringify({ value: JSON.parse(JSON.stringify(value)) })
       });
       if (res.ok) showSync('saved');
-      else { showSync('error'); console.warn('jbSet response:', res.status); }
+      else { showSync('error'); console.warn('jbSet status:', res.status); }
     } catch(e) { showSync('error'); console.error('jbSet error:', e.message); }
   }, 800);
 }
@@ -475,10 +444,11 @@ async function jbSet(docName, value) {
 function showSync(state) {
   const el = document.getElementById('sync-status');
   if (!el) return;
-  const map = { saving: ['⏳ Guardando…','#b7791f'], saved: ['☁️ Guardado','#2d6a4f'], error: ['⚠️ Sin conexión','#c53030'] };
-  const [txt, color] = map[state] || ['',''];
-  el.textContent = txt; el.style.color = color; el.style.display = 'inline';
-  if (state === 'saved') setTimeout(() => { el.style.display = 'none'; }, 2500);
+  if (state === 'saving') { el.textContent = '⏳ Guardando…'; el.style.color = '#b7791f'; }
+  else if (state === 'saved') { el.textContent = '☁️ Guardado'; el.style.color = '#2d6a4f'; }
+  else { el.textContent = '⚠️ Sin conexión'; el.style.color = '#c53030'; }
+  el.style.display = 'inline';
+  if (state === 'saved') setTimeout(function() { el.style.display = 'none'; }, 2500);
 }
 </script>
 
@@ -501,9 +471,6 @@ function showSync(state) {
     </div>
     <button class="login-btn" onclick="doLogin()">Entrar →</button>
     <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
-  </div>
-  <div style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.4);backdrop-filter:blur(10px);border:1px solid rgba(116,198,157,0.25);border-radius:12px;padding:12px 22px;font-family:DM Sans,sans-serif;font-size:0.78rem;color:#a8d8be;max-width:400px;width:90vw;text-align:center;line-height:1.6;">
-    ⚙️ Sincronizacion <a href="https://jsonbin.io" target="_blank" style="color:#e9c46a;text-decoration:underline;">jsonbin.io</a> Activa
   </div>
 </div>
 
@@ -622,7 +589,6 @@ function showSync(state) {
           <option>La Comer</option>
           <option>Bodega Aurrera</option>
           <option>Costco</option>
-          <option>Gutierrez</option>
           <option>Otro</option>
         </select>
         <button class="export-btn" onclick="exportDespensa()">📋 Copiar lista</button>
@@ -1154,6 +1120,7 @@ let selectorContext = null;
 let pantryIngredients = [];
 let despensaData = [];
 let selectorCatFilter = 'all';
+let _fbReady = false;
 
 // ================================================================
 // AUTH
@@ -1164,27 +1131,20 @@ async function doLogin() {
   if (u === 'brikatwo' && p === 'Brika777') {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
-    // Loader
     document.body.insertAdjacentHTML('beforeend',
-      '<div id="jb-loading" style="position:fixed;inset:0;background:rgba(254,253,248,0.94);z-index:9998;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;">' +
+      '<div id="jb-loading" style="position:fixed;inset:0;background:rgba(254,253,248,0.95);z-index:9998;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;">' +
       '<div style="font-size:3rem">🌿</div>' +
       '<div style="font-family:DM Sans,sans-serif;color:#2d6a4f;font-size:1.1rem;font-weight:600">Cargando tus datos…</div>' +
       '<div style="font-family:DM Sans,sans-serif;color:#5a5a7a;font-size:0.85rem">Conectando con la nube ☁️</div></div>');
-    // Cargar IDs de bins guardados
-    loadBinIds();
-    // Cargar datos desde JSONBin
-    if (JB_KEY && JB_KEY !== 'TU_SECRET_KEY') {
-      try {
-        const [wp, pi, dd] = await Promise.all([
-          jbGet('weekPlan'), jbGet('pantryIngs'), jbGet('despensa')
-        ]);
-        if (wp) weekPlan = wp;
-        if (pi) pantryIngredients = pi;
-        if (dd) despensaData = dd;
-      } catch(e) { console.log('Iniciando con datos vacíos'); }
-    }
+    try {
+      const [wp, pi, dd] = await Promise.all([
+        jbGet('weekPlan'), jbGet('pantryIngs'), jbGet('despensa')
+      ]);
+      if (wp) weekPlan = wp;
+      if (pi) pantryIngredients = pi;
+      if (dd) despensaData = dd;
+    } catch(e) { console.log('Sin datos previos:', e); }
     _fbReady = true;
-    // Quitar loader
     const loader = document.getElementById('jb-loading');
     if (loader) loader.remove();
     renderRecipes(); renderWeek(); renderPantry(); renderDespensa(); updateDespensaStats();
@@ -1519,7 +1479,7 @@ function matchRecipes() {
 // ================================================================
 const ZONAS = ['Verduras y Frutas','Carnicería','Salchichonería','Congelados','Lácteos','Abarrotes','Panadería','Pasillo','Otros'];
 const UNIDADES = ['pzas','g','kg','ml','L','bolsa','lata','caja','sobre','racimo','manojo'];
-const SUPERS = ['Walmart','HEB','Soriana','Chedraui','La Comer','Bodega Aurrera','Costco','Gutierrez','Otro'];
+const SUPERS = ['Walmart','HEB','Soriana','Chedraui','La Comer','Bodega Aurrera','Costco','Otro'];
 
 function zonaBadgeClass(z) {
   if (!z) return 'zona-otros';
